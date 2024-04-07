@@ -56,7 +56,10 @@ endif()
 set(
 	SOURCES 
 	"source/Kiatris.cpp"
- "source/Game/Piece.cpp")
+    "source/Game/Piece.cpp" 
+    "source/Game/SceneGame.cpp"
+    "source/Game/SceneManager.cpp"
+)
 
 set(
 	INCLUDE_DIRECTORIES 

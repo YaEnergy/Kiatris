@@ -45,3 +45,19 @@ Vector2Int Piece::Measure() const
 
 	return { right - left, bottom - top };
 }
+
+raylib::Rectangle Piece::GetBounds() const
+{
+	int left = INT32_MAX;
+	int right = INT32_MIN;
+
+	int top = INT32_MAX;
+	int bottom = INT32_MIN;
+
+	return { (float)left, (float)top, (float)(right - left), (float)(bottom - top) };
+}
+
+Piece Piece::GetMainPiece(MainPieceType mainPieceType)
+{
+	return Piece();
+}
