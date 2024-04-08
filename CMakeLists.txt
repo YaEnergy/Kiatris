@@ -51,7 +51,6 @@ if (NOT raylib_cpp_FOUND)
   endif()
 endif()
 
-
 # Main
 set(
 	SOURCES 
@@ -64,6 +63,7 @@ set(
 set(
 	INCLUDE_DIRECTORIES 
 	"include"
+    "libs/emsdk/upstream/emscripten/system/include"
 )
 
 if (WIN32)

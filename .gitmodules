@@ -1,0 +1,4 @@
+[submodule "libs/emsdk"]
+	path = libs/emsdk
+	url = https://github.com/emscripten-core/emsdk
+	branch = Main
