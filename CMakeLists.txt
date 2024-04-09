@@ -63,8 +63,15 @@ set(
 set(
 	INCLUDE_DIRECTORIES 
 	"include"
-    "libs/emsdk/upstream/emscripten/system/include"
 )
+
+if (${PLATFORM} MATCHES "Web")
+    set(
+        INCLUDE_DIRECTORIES 
+        ${INCLUDE_DIRECTORIES}
+        "libs/emsdk/upstream/emscripten/system/include"
+    )
+endif()
 
 if (WIN32)
     if (CMAKE_BUILD_TYPE STREQUAL "Release")
@@ -86,7 +93,6 @@ else()
     set(SUBSYSTEM_LINKER_OPTIONS "$<IF:$<NOT:$<CONFIG:Debug>>,-mwindows,>")
     target_link_options(${PROJECT_NAME} PRIVATE ${SUBSYSTEM_LINKER_OPTIONS})
 endif()
-
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRECTORIES})
 

@@ -39,8 +39,7 @@ class Game
 				UpdateDrawFrame();
 			}
 
-			window.Close();
-			audioDevice.Close();
+			//window and audio device are closed automatically
 		}
 };
 
