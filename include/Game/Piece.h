@@ -17,8 +17,8 @@ enum MainPieceType
 struct Piece
 {
 	raylib::Vector2 pivotOffset; //pivot to rotate around
-	Vector2Int* blockOffsets; //block offsets from origin, not pivot
-	raylib::Color* blockColors; //colors of blocks
+	std::vector<Vector2Int> blockOffsets; //block offsets from origin, not pivot
+	std::vector<raylib::Color> blockColors; //colors of blocks
 	int numBlocks; //amount of blocks
 
 	void RotateLeft();
@@ -28,13 +28,13 @@ struct Piece
 	Vector2Int Measure() const;
 	raylib::Rectangle GetBounds() const;
 
-	static Piece* GetMainPiece(MainPieceType mainPieceType);
+	static Piece GetMainPiece(MainPieceType mainPieceType);
 
 	Piece()
 	{
 		pivotOffset = { 0, 0 };
-		blockOffsets = nullptr;
-		blockColors = nullptr;
+		blockOffsets = std::vector<Vector2Int>(0);;
+		blockColors = std::vector<raylib::Color>(0);
 		numBlocks = 0;
 	}
 
@@ -49,12 +49,12 @@ struct Piece
 	Piece(int numBlocks)
 	{
 		pivotOffset = { 0, 0 };
-		blockOffsets = new Vector2Int[numBlocks];
-		blockColors = new raylib::Color[numBlocks];
+		blockOffsets = std::vector<Vector2Int>(numBlocks);;
+		blockColors = std::vector<raylib::Color>(numBlocks);
 		this->numBlocks = numBlocks;
 	}
 
-	Piece(Vector2 pivotOffset, Vector2Int* blockOffsets, raylib::Color* blockColors, int numBlocks)
+	Piece(Vector2 pivotOffset, std::vector<Vector2Int> blockOffsets, std::vector<raylib::Color> blockColors, int numBlocks)
 	{
 		this->pivotOffset = pivotOffset;
 		this->blockOffsets = blockOffsets;
@@ -64,10 +64,6 @@ struct Piece
 
 	~Piece()
 	{
-		if (blockOffsets != nullptr)
-			delete[] blockOffsets;
-
-		if (blockColors != nullptr)
-			delete[] blockColors;
+		
 	}
 };

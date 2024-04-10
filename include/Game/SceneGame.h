@@ -20,7 +20,11 @@ class SceneGame : public Scene
 		raylib::Color** grid;
 
 		bool gameOver = false;
+
+		//statistics
 		int score = 0;
+		int linesCleared = 0;
+		float timePlayingSeconds = 0;
 
 		//Gameplay
 		void UpdateGameplay();
@@ -47,12 +51,12 @@ class SceneGame : public Scene
 
 			//TODO: randomize pieces
 			//current piece
-			currentPiece = *(Piece::GetMainPiece(PIECE_T));
+			currentPiece = Piece::GetMainPiece(PIECE_T);
 			
 			//up and coming pieces
 			upAndComingPieces = new Piece[modifiers.NumUpAndComingPieces];
 			for (int i = 0; i < modifiers.NumUpAndComingPieces; i++)
-				upAndComingPieces[i] = *(Piece::GetMainPiece(PIECE_I));
+				upAndComingPieces[i] = Piece::GetMainPiece(PIECE_I);
 
 			//Create grid
 			grid = new raylib::Color*[modifiers.GridSize.y];

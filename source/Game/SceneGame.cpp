@@ -41,10 +41,6 @@ void SceneGame::UpdateGameplay()
 
 	currentPiecePosition = { currentPiecePosition.x + movement.x, currentPiecePosition.y + movement.y };
 
-	//TODO: getting new pieces causes a memory leak, the pointers for pieces are most likely not being deleted. Fix this!!!!!
-	//for (int i = 0; i < 2000; i++)
-		//PlacePiece();
-
 	if (IsKeyPressed(KEY_SPACE))
 		PlacePiece();
 }
@@ -79,7 +75,7 @@ void SceneGame::PlacePiece()
 
 	//New piece
 	currentPiecePosition = { 0, 0 };
-	currentPiece = *(Piece::GetMainPiece((MainPieceType)GetRandomValue(0, 6)));
+	currentPiece = Piece::GetMainPiece((MainPieceType)GetRandomValue(0, 6));
 }
 
 #pragma endregion
