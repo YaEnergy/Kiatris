@@ -15,7 +15,7 @@ class SceneGame : public Scene
 		Vector2Int currentPiecePosition = { 0, 0 };
 
 		Piece holdingPiece;
-		Piece* upAndComingPieces = nullptr;
+		std::vector<Piece> upAndComingPieces;
 
 		raylib::Color** grid;
 
@@ -32,31 +32,29 @@ class SceneGame : public Scene
 		void EndGame();
 
 		//Pieces
-		bool CanMovePiece(Vector2Int movement);
-		bool CanRotatePieceLeft();
-		bool CanRotatePieceRight();
-		bool CanRotatePieceHalfCircle();
+		Piece GetRandomPiece();
+		bool CanPieceExistAt(Vector2Int position);
 
+		void NextPiece();
 		void PlacePiece();
 		void HoldPiece();
 		void HardDropPiece();
 
 		//Grid
-		void ClearLine();
+		bool IsCellEmpty(int x, int y); 
+		void ClearLine(int line);
 
 	public:
 		SceneGame(GameModifiers modifiers)
 		{
 			gameModifiers = modifiers;
 
-			//TODO: randomize pieces
-			//current piece
-			currentPiece = Piece::GetMainPiece(PIECE_T);
-			
-			//up and coming pieces
-			upAndComingPieces = new Piece[modifiers.NumUpAndComingPieces];
+			//pieces
+			upAndComingPieces = std::vector<Piece>(modifiers.NumUpAndComingPieces);
 			for (int i = 0; i < modifiers.NumUpAndComingPieces; i++)
-				upAndComingPieces[i] = Piece::GetMainPiece(PIECE_I);
+				upAndComingPieces[i] = GetRandomPiece();
+
+			NextPiece();
 
 			//Create grid
 			grid = new raylib::Color*[modifiers.GridSize.y];

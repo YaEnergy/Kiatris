@@ -22,6 +22,7 @@ void SceneGame::UpdateGameplay()
 	//for testing purposes
 	Vector2Int movement = { 0, 0 };
 
+	//movement
 	if (IsKeyPressed(KEY_RIGHT))
 		movement.x = 1;
 	else if (IsKeyPressed(KEY_LEFT))
@@ -32,6 +33,7 @@ void SceneGame::UpdateGameplay()
 	else if (IsKeyPressed(KEY_UP))
 		movement.y = -1;
 
+	//rotation
 	if (IsKeyPressed(KEY_E))
 		currentPiece.RotateLeft();
 	else if (IsKeyPressed(KEY_R))
@@ -39,10 +41,25 @@ void SceneGame::UpdateGameplay()
 	else if (IsKeyPressed(KEY_T))
 		currentPiece.RotateHalfCircle();
 
-	currentPiecePosition = { currentPiecePosition.x + movement.x, currentPiecePosition.y + movement.y };
+	Vector2Int newPiecePosition = { currentPiecePosition.x + movement.x, currentPiecePosition.y + movement.y };
+	if (CanPieceExistAt(newPiecePosition))
+		currentPiecePosition = newPiecePosition;
+	else
+	{
+		//backtrack rotation, for testing purposes only rn
+		//TODO: improve this
+		if (IsKeyPressed(KEY_E))
+			currentPiece.RotateRight();
+		else if (IsKeyPressed(KEY_R))
+			currentPiece.RotateLeft();
+		else if (IsKeyPressed(KEY_T))
+			currentPiece.RotateHalfCircle();
+	}
 
 	if (IsKeyPressed(KEY_SPACE))
 		PlacePiece();
+	else if (IsKeyPressed(KEY_C))
+		HoldPiece();
 }
 
 void SceneGame::UpdateGameOver()
@@ -59,6 +76,41 @@ void SceneGame::EndGame()
 
 #pragma region Pieces
 
+Piece SceneGame::GetRandomPiece()
+{
+	return Piece::GetMainPiece((MainPieceType)GetRandomValue(0, 6));
+}
+
+bool SceneGame::CanPieceExistAt(Vector2Int position)
+{
+	//if any block is out of bounds or not empty, then the piece can not exist at this position
+	for (int i = 0; i < currentPiece.numBlocks; i++)
+	{
+		if (!IsCellEmpty(position.x + currentPiece.blockOffsets[i].x, position.y + currentPiece.blockOffsets[i].y))
+			return false;
+	}
+
+	return true;
+}
+
+void SceneGame::NextPiece()
+{
+	//get next piece in line
+	currentPiece = upAndComingPieces[0];
+
+	//move up and coming pieces downwards
+	for (int i = 0; i < gameModifiers.NumUpAndComingPieces - 1; i++)
+		upAndComingPieces[i] = upAndComingPieces[i + 1];
+
+	//fill last spot with new piece
+	upAndComingPieces[gameModifiers.NumUpAndComingPieces - 1] = GetRandomPiece();
+
+	Rectangle pieceBounds = currentPiece.GetBounds();
+	currentPiecePosition = { gameModifiers.GridSize.x / 2 , (int)(-pieceBounds.y) };
+
+	std::cout << "next piece in line" << std::endl;
+}
+
 void SceneGame::PlacePiece()
 {
 	//Place piece into grid
@@ -73,12 +125,47 @@ void SceneGame::PlacePiece()
 		grid[currentPiecePosition.y + currentPiece.blockOffsets[i].y][currentPiecePosition.x + currentPiece.blockOffsets[i].x] = currentPiece.blockColors[i];
 	}
 
-	//New piece
-	currentPiecePosition = { 0, 0 };
-	currentPiece = Piece::GetMainPiece((MainPieceType)GetRandomValue(0, 6));
+	std::cout << "Placed piece!" << std::endl;
+
+	NextPiece();
+}
+
+void SceneGame::HoldPiece()
+{
+	Piece tempPiece = holdingPiece;
+
+	holdingPiece = currentPiece;
+
+	//Go to next piece if we weren't holding a piece yet
+	if (tempPiece.numBlocks == 0)
+		NextPiece();
+	//Swap held piece out into current piece
+	else
+		currentPiece = tempPiece;
+
+	std::cout << "Hold piece" << std::endl;
 }
 
 #pragma endregion
+
+#pragma region Grid
+
+//Out of bounds cells do not count as empty and thus return false.
+bool SceneGame::IsCellEmpty(int x, int y)
+{
+	if (x < 0 || x >= gameModifiers.GridSize.x || y < 0 || y >= gameModifiers.GridSize.y)
+		return false;
+
+	return grid[y][x] == EMPTY_BLOCK_COLOR;
+}
+
+void SceneGame::ClearLine(int line)
+{
+	//implement
+}
+
+#pragma endregion
+
 
 void SceneGame::Draw()
 {
@@ -114,12 +201,10 @@ void SceneGame::Draw()
 
 void SceneGame::Destroy()
 {
-	//TODO: finish this
-	//add if not null pointer
+	//Destroy grid
 
-	//delete currentPiece;
-	//delete holdingPiece;
+	for (int y = 0; y < gameModifiers.GridSize.y; y++)
+		delete[] grid[y];
 
-	//Destroy up and coming
-	delete[] upAndComingPieces;
+	delete[] grid;
 }
