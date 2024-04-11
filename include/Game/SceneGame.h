@@ -9,10 +9,13 @@
 class SceneGame : public Scene
 {
 	private:
+		raylib::Window& gameWindow;
+
 		GameModifiers gameModifiers;
 
 		Piece currentPiece;
 		Vector2Int currentPiecePosition = { 0, 0 };
+		float gravityPieceDeltaTime = 0.0f;
 
 		Piece holdingPiece;
 		std::vector<Piece> upAndComingPieces;
@@ -23,6 +26,7 @@ class SceneGame : public Scene
 
 		//statistics
 		int score = 0;
+		int level = 0;
 		int linesCleared = 0;
 		float timePlayingSeconds = 0;
 
@@ -45,7 +49,7 @@ class SceneGame : public Scene
 		void ClearLine(int line);
 
 	public:
-		SceneGame(GameModifiers modifiers)
+		SceneGame(raylib::Window& window, GameModifiers modifiers) : gameWindow(window)
 		{
 			gameModifiers = modifiers;
 

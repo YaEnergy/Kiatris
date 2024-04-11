@@ -19,6 +19,11 @@ void SceneGame::Update()
 
 void SceneGame::UpdateGameplay()
 {
+	float deltaTime = gameWindow.GetFrameTime();
+
+	gravityPieceDeltaTime += deltaTime;
+	timePlayingSeconds += deltaTime;
+
 	//for testing purposes
 	Vector2Int movement = { 0, 0 };
 
@@ -27,11 +32,6 @@ void SceneGame::UpdateGameplay()
 		movement.x = 1;
 	else if (IsKeyPressed(KEY_LEFT))
 		movement.x = -1;
-
-	if (IsKeyPressed(KEY_DOWN))
-		movement.y = 1;
-	else if (IsKeyPressed(KEY_UP))
-		movement.y = -1;
 
 	//rotation
 	if (IsKeyPressed(KEY_E))
@@ -56,10 +56,40 @@ void SceneGame::UpdateGameplay()
 			currentPiece.RotateHalfCircle();
 	}
 
+	//for testing purposes
+	if (IsKeyPressed(KEY_N))
+		level++;
+	else if (IsKeyPressed(KEY_B))
+		level--;
+
 	if (IsKeyPressed(KEY_SPACE))
+	{
+		HardDropPiece();
 		PlacePiece();
+	}
 	else if (IsKeyPressed(KEY_C))
 		HoldPiece();
+	else
+	{
+		if (IsKeyPressed(KEY_DOWN))
+			gravityPieceDeltaTime = 1.0f / 20.0f;
+
+		int gravityLevel = std::min(level - 1, 14);
+		float gravityMovementTime = IsKeyDown(KEY_DOWN) ? 1.0f / 20.0f : std::powf(0.8f - ((float)gravityLevel * 0.007f), (float)gravityLevel);
+		
+		while (gravityPieceDeltaTime >= gravityMovementTime)
+		{
+			gravityPieceDeltaTime -= gravityMovementTime;
+
+			if (CanPieceExistAt({ currentPiecePosition.x, currentPiecePosition.y + 1 }))
+				currentPiecePosition = { currentPiecePosition.x, currentPiecePosition.y + 1 };
+			else
+			{
+				PlacePiece();
+				break;
+			}
+		}
+	}
 }
 
 void SceneGame::UpdateGameOver()
@@ -108,6 +138,8 @@ void SceneGame::NextPiece()
 	Rectangle pieceBounds = currentPiece.GetBounds();
 	currentPiecePosition = { gameModifiers.GridSize.x / 2 , (int)(-pieceBounds.y) };
 
+	gravityPieceDeltaTime = 0.0f;
+
 	std::cout << "next piece in line" << std::endl;
 }
 
@@ -143,7 +175,18 @@ void SceneGame::HoldPiece()
 	else
 		currentPiece = tempPiece;
 
+	Rectangle pieceBounds = currentPiece.GetBounds();
+	currentPiecePosition = { gameModifiers.GridSize.x / 2 , (int)(-pieceBounds.y) };
+	gravityPieceDeltaTime = 0.0f;
+
 	std::cout << "Hold piece" << std::endl;
+}
+
+void SceneGame::HardDropPiece()
+{
+	//Instantly move piece downwards until it can't anymore
+	while (CanPieceExistAt({ currentPiecePosition.x, currentPiecePosition.y + 1 }))
+		currentPiecePosition = { currentPiecePosition.x, currentPiecePosition.y + 1 };
 }
 
 #pragma endregion
@@ -170,10 +213,13 @@ void SceneGame::ClearLine(int line)
 void SceneGame::Draw()
 {
 	//prototype
+	int screenWidth = gameWindow.GetWidth();
+	int screenHeight = gameWindow.GetHeight();
 
-	Vector2 blockSize = { 32.0f, 32.0f };
+	float blockSize = std::min((float)(screenWidth / gameModifiers.GridSize.x), (float)(screenHeight / gameModifiers.GridSize.y));
 
-	Vector2 totalGridSize = { blockSize.x * gameModifiers.GridSize.x, blockSize.y * gameModifiers.GridSize.y };
+	Vector2 totalGridSize = { blockSize * gameModifiers.GridSize.x, blockSize * gameModifiers.GridSize.y };
+	float startGridPosX = ((float)screenWidth - totalGridSize.x) / 2.0f;
 
 	//Draw grid
 	for (int y = 0; y < gameModifiers.GridSize.y; y++)
@@ -183,7 +229,7 @@ void SceneGame::Draw()
 			if (grid[y][x] == EMPTY_BLOCK_COLOR)
 				continue;
 
-			raylib::Rectangle rect = { blockSize.x * x, blockSize.y * y, blockSize.x, blockSize.y };
+			raylib::Rectangle rect = { startGridPosX + blockSize * x, blockSize * y, blockSize, blockSize };
 			rect.Draw(grid[y][x]);
 		}
 	}
@@ -191,12 +237,19 @@ void SceneGame::Draw()
 	//Draw current piece
 	for (int i = 0; i < currentPiece.numBlocks; i++)
 	{
-		raylib::Rectangle rect = { blockSize.x * (currentPiecePosition.x + currentPiece.blockOffsets[i].x), blockSize.y * (currentPiecePosition.y + currentPiece.blockOffsets[i].y), blockSize.x, blockSize.y};
+		raylib::Rectangle rect = { startGridPosX + blockSize * (currentPiecePosition.x + currentPiece.blockOffsets[i].x), blockSize * (currentPiecePosition.y + currentPiece.blockOffsets[i].y), blockSize, blockSize};
 		rect.Draw(currentPiece.blockColors[i]);
 	}
 
+	raylib::Color borderColor = raylib::Color::Gray();
+	borderColor.DrawLine({ startGridPosX, 0 }, { startGridPosX, (float)screenHeight }, 4.0f);
+	borderColor.DrawLine({ startGridPosX + totalGridSize.x, 0 }, { startGridPosX + totalGridSize.x, (float)screenHeight }, 4.0f);
+
 	//Draw score
-	raylib::DrawText("Score: " + std::to_string(score), totalGridSize.x + 10, 0, 36, raylib::Color::White());
+	raylib::DrawText("Score: " + std::to_string(score), startGridPosX + totalGridSize.x + 10, 0, 36, raylib::Color::White());
+	raylib::DrawText("Level: " + std::to_string(level), startGridPosX + totalGridSize.x + 10, 36, 36, raylib::Color::White());
+	raylib::DrawText("Cleared: " + std::to_string(linesCleared), startGridPosX + totalGridSize.x + 10, 36 * 2, 36, raylib::Color::White());
+	raylib::DrawText("Time: " + std::to_string(timePlayingSeconds), startGridPosX + totalGridSize.x + 10, 36 * 3, 36, raylib::Color::White());
 }
 
 void SceneGame::Destroy()
