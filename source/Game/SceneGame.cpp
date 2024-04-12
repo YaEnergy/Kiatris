@@ -17,6 +17,49 @@ void SceneGame::Update()
 
 #pragma region Gameplay
 
+void SceneGame::StartGame(GameModifiers modifiers)
+{
+	if (grid != nullptr)
+	{
+		for (int y = 0; y < gameModifiers.GridSize.y; y++)
+			delete[] grid[y];
+
+		delete[] grid;
+	}
+
+	//main
+	gameModifiers = modifiers;
+	gameOver = false;
+
+	//delta times
+	gravityPieceDeltaTime = 0.0f;
+
+	//statistics
+	timePlayingSeconds = 0.0f;
+	totalLinesCleared = 0;
+	score = 0;
+	level = 0;
+
+	//pieces
+	upAndComingPieces = std::vector<Piece>(modifiers.NumUpAndComingPieces);
+	for (int i = 0; i < modifiers.NumUpAndComingPieces; i++)
+		upAndComingPieces[i] = GetRandomPiece();
+
+	NextPiece();
+
+	//Create grid
+	grid = new raylib::Color * [modifiers.GridSize.y];
+	for (int y = 0; y < modifiers.GridSize.y; y++)
+	{
+		grid[y] = new raylib::Color[modifiers.GridSize.x];
+
+		for (int x = 0; x < modifiers.GridSize.x; x++)
+		{
+			grid[y][x] = raylib::Color::Blank();
+		}
+	}
+}
+
 void SceneGame::UpdateGameplay()
 {
 	float deltaTime = gameWindow.GetFrameTime();
@@ -66,6 +109,9 @@ void SceneGame::UpdateGameplay()
 	{
 		HardDropPiece();
 		PlacePiece();
+
+		if (!CanPieceExistAt(currentPiecePosition))
+			EndGame();
 	}
 	else if (IsKeyPressed(KEY_C))
 		HoldPiece();
@@ -89,17 +135,58 @@ void SceneGame::UpdateGameplay()
 				break;
 			}
 		}
+
+		if (!CanPieceExistAt(currentPiecePosition))
+			EndGame();
 	}
+
+	//line clearing
+	int linesCleared = 0;
+	int scoreMultiplier = 0;
+
+	//check all lines
+	for (int y = 0; y < gameModifiers.GridSize.y; y++)
+	{
+		bool isClear = true;
+
+		for (int x = 0; x < gameModifiers.GridSize.x; x++)
+		{
+			if (IsCellEmpty(x, y))
+			{
+				isClear = false;
+				break;
+			}
+		}
+
+		if (isClear)
+		{
+			linesCleared += 1;
+
+			if (linesCleared == 1)
+				scoreMultiplier = 1;
+			else
+				scoreMultiplier *= 4;
+
+			ClearLine(y);
+		}
+	}
+
+	if (linesCleared > 0)
+		std::cout << "Cleared " + std::to_string(linesCleared) + " line(s) " << std::endl;
+
+	totalLinesCleared += linesCleared;
+	score += 1000 * scoreMultiplier;
 }
 
 void SceneGame::UpdateGameOver()
 {
-
+	if (IsKeyPressed(KEY_SPACE))
+		StartGame(gameModifiers);
 }
 
 void SceneGame::EndGame()
 {
-
+	gameOver = true;
 }
 
 #pragma endregion
@@ -135,8 +222,7 @@ void SceneGame::NextPiece()
 	//fill last spot with new piece
 	upAndComingPieces[gameModifiers.NumUpAndComingPieces - 1] = GetRandomPiece();
 
-	Rectangle pieceBounds = currentPiece.GetBounds();
-	currentPiecePosition = { gameModifiers.GridSize.x / 2 , (int)(-pieceBounds.y) };
+	currentPiecePosition = { gameModifiers.GridSize.x / 2 , 0 };
 
 	gravityPieceDeltaTime = 0.0f;
 
@@ -175,8 +261,7 @@ void SceneGame::HoldPiece()
 	else
 		currentPiece = tempPiece;
 
-	Rectangle pieceBounds = currentPiece.GetBounds();
-	currentPiecePosition = { gameModifiers.GridSize.x / 2 , (int)(-pieceBounds.y) };
+	currentPiecePosition = { gameModifiers.GridSize.x / 2 , 0 };
 	gravityPieceDeltaTime = 0.0f;
 
 	std::cout << "Hold piece" << std::endl;
@@ -187,24 +272,42 @@ void SceneGame::HardDropPiece()
 	//Instantly move piece downwards until it can't anymore
 	while (CanPieceExistAt({ currentPiecePosition.x, currentPiecePosition.y + 1 }))
 		currentPiecePosition = { currentPiecePosition.x, currentPiecePosition.y + 1 };
+
+	std::cout << "Hard drop piece" << std::endl;
 }
 
 #pragma endregion
 
 #pragma region Grid
 
-//Out of bounds cells do not count as empty and thus return false.
+//Out of bounds cells do not count as empty and thus return false, unless this cell is above the grid but still within the left and right bounds.
 bool SceneGame::IsCellEmpty(int x, int y)
 {
-	if (x < 0 || x >= gameModifiers.GridSize.x || y < 0 || y >= gameModifiers.GridSize.y)
+	if (x < 0 || x >= gameModifiers.GridSize.x || y >= gameModifiers.GridSize.y)
 		return false;
+
+	if (y < 0)
+		return true;
 
 	return grid[y][x] == EMPTY_BLOCK_COLOR;
 }
 
 void SceneGame::ClearLine(int line)
 {
-	//implement
+	//shift everything downwards
+	for (int y = line; y > 0; y--)
+	{
+		for (int x = 0; x < gameModifiers.GridSize.x; x++)
+		{
+			grid[y][x] = grid[y - 1][x];
+		}
+	}
+
+	//clear line 0
+	for (int x = 0; x < gameModifiers.GridSize.x; x++)
+		grid[0][x] = EMPTY_BLOCK_COLOR;
+	
+	std::cout << "Cleared line " + std::to_string(line) << std::endl;
 }
 
 #pragma endregion
@@ -248,7 +351,7 @@ void SceneGame::Draw()
 	//Draw score
 	raylib::DrawText("Score: " + std::to_string(score), startGridPosX + totalGridSize.x + 10, 0, 36, raylib::Color::White());
 	raylib::DrawText("Level: " + std::to_string(level), startGridPosX + totalGridSize.x + 10, 36, 36, raylib::Color::White());
-	raylib::DrawText("Cleared: " + std::to_string(linesCleared), startGridPosX + totalGridSize.x + 10, 36 * 2, 36, raylib::Color::White());
+	raylib::DrawText("Cleared: " + std::to_string(totalLinesCleared), startGridPosX + totalGridSize.x + 10, 36 * 2, 36, raylib::Color::White());
 	raylib::DrawText("Time: " + std::to_string(timePlayingSeconds), startGridPosX + totalGridSize.x + 10, 36 * 3, 36, raylib::Color::White());
 }
 

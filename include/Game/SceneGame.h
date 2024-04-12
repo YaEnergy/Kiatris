@@ -20,17 +20,18 @@ class SceneGame : public Scene
 		Piece holdingPiece;
 		std::vector<Piece> upAndComingPieces;
 
-		raylib::Color** grid;
+		raylib::Color** grid = nullptr;
 
 		bool gameOver = false;
 
 		//statistics
 		int score = 0;
 		int level = 0;
-		int linesCleared = 0;
+		int totalLinesCleared = 0;
 		float timePlayingSeconds = 0;
 
 		//Gameplay
+		void StartGame(GameModifiers modifiers);
 		void UpdateGameplay();
 		void UpdateGameOver();
 		void EndGame();
@@ -51,26 +52,7 @@ class SceneGame : public Scene
 	public:
 		SceneGame(raylib::Window& window, GameModifiers modifiers) : gameWindow(window)
 		{
-			gameModifiers = modifiers;
-
-			//pieces
-			upAndComingPieces = std::vector<Piece>(modifiers.NumUpAndComingPieces);
-			for (int i = 0; i < modifiers.NumUpAndComingPieces; i++)
-				upAndComingPieces[i] = GetRandomPiece();
-
-			NextPiece();
-
-			//Create grid
-			grid = new raylib::Color*[modifiers.GridSize.y];
-			for (int y = 0; y < modifiers.GridSize.y; y++)
-			{
-				grid[y] = new raylib::Color[modifiers.GridSize.x];
-
-				for (int x = 0; x < modifiers.GridSize.x; x++)
-				{
-					grid[y][x] = raylib::Color::Blank();
-				}
-			}
+			StartGame(modifiers);
 		}
 
 		void Init();
