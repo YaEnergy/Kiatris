@@ -16,6 +16,7 @@ class SceneGame : public Scene
 		Piece currentPiece;
 		Vector2Int currentPiecePosition = { 0, 0 };
 		float gravityPieceDeltaTime = 0.0f;
+		float movementPieceDeltaTime = 0.0f;
 
 		Piece holdingPiece;
 		std::vector<Piece> upAndComingPieces;

@@ -33,6 +33,7 @@ void SceneGame::StartGame(GameModifiers modifiers)
 
 	//delta times
 	gravityPieceDeltaTime = 0.0f;
+	movementPieceDeltaTime = 0.0f;
 
 	//statistics
 	timePlayingSeconds = 0.0f;
@@ -65,16 +66,10 @@ void SceneGame::UpdateGameplay()
 	float deltaTime = gameWindow.GetFrameTime();
 
 	gravityPieceDeltaTime += deltaTime;
+	movementPieceDeltaTime += deltaTime;
 	timePlayingSeconds += deltaTime;
 
-	//for testing purposes
-	Vector2Int movement = { 0, 0 };
-
-	//movement
-	if (IsKeyPressed(KEY_RIGHT))
-		movement.x = 1;
-	else if (IsKeyPressed(KEY_LEFT))
-		movement.x = -1;
+	level = totalLinesCleared / 10;
 
 	//rotation
 	if (IsKeyPressed(KEY_E))
@@ -84,13 +79,52 @@ void SceneGame::UpdateGameplay()
 	else if (IsKeyPressed(KEY_T))
 		currentPiece.RotateHalfCircle();
 
-	Vector2Int newPiecePosition = { currentPiecePosition.x + movement.x, currentPiecePosition.y + movement.y };
-	if (CanPieceExistAt(newPiecePosition))
-		currentPiecePosition = newPiecePosition;
-	else
+	//movement
+	Vector2Int movement = { 0, 0 };
+	const float movePieceTime = 1.0f / 5.0f;
+
+	if (IsKeyDown(KEY_RIGHT))
 	{
-		//backtrack rotation, for testing purposes only rn
-		//TODO: improve this
+		if (IsKeyPressed(KEY_RIGHT))
+			movementPieceDeltaTime = movePieceTime;
+
+		movement.x = 1;
+
+	}
+	else if (IsKeyDown(KEY_LEFT))
+	{
+		if (IsKeyPressed(KEY_LEFT))
+			movementPieceDeltaTime = movePieceTime;
+
+		movement.x = -1;
+	}
+
+	bool positionSuccess = false;
+
+	if ((IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_RIGHT)) && movementPieceDeltaTime >= movePieceTime)
+	{
+		while (movementPieceDeltaTime >= movePieceTime)
+		{
+			movementPieceDeltaTime -= movePieceTime;
+
+			Vector2Int newPiecePosition = { currentPiecePosition.x + movement.x, currentPiecePosition.y + movement.y };
+
+			if (CanPieceExistAt(newPiecePosition))
+			{
+				currentPiecePosition = newPiecePosition;
+				positionSuccess = true;
+			}
+			else
+				break;
+		}
+	}
+	else
+		positionSuccess = CanPieceExistAt(currentPiecePosition);
+
+	//if new position is not successful
+	if (!positionSuccess)
+	{
+		//backtrack rotation
 		if (IsKeyPressed(KEY_E))
 			currentPiece.RotateRight();
 		else if (IsKeyPressed(KEY_R))
@@ -98,12 +132,6 @@ void SceneGame::UpdateGameplay()
 		else if (IsKeyPressed(KEY_T))
 			currentPiece.RotateHalfCircle();
 	}
-
-	//for testing purposes
-	if (IsKeyPressed(KEY_N))
-		level++;
-	else if (IsKeyPressed(KEY_B))
-		level--;
 
 	if (IsKeyPressed(KEY_SPACE))
 	{
