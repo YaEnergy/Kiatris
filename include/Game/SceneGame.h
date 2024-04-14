@@ -19,6 +19,8 @@ class SceneGame : public Scene
 		float movementPieceDeltaTime = 0.0f;
 
 		Piece holdingPiece;
+		bool hasSwitchedPiece = false;
+
 		std::vector<Piece> upAndComingPieces;
 
 		raylib::Color** grid = nullptr;

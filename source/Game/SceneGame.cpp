@@ -1,4 +1,5 @@
 #include "Game/SceneGame.h"
+#include "Assets.h"
 
 const raylib::Color EMPTY_BLOCK_COLOR = raylib::Color::Blank();
 
@@ -71,13 +72,15 @@ void SceneGame::UpdateGameplay()
 
 	level = totalLinesCleared / 10;
 
+	Piece piece = currentPiece;
+
 	//rotation
 	if (IsKeyPressed(KEY_E))
-		currentPiece.RotateLeft();
+		piece = piece.GetLeftRotation();
 	else if (IsKeyPressed(KEY_R))
-		currentPiece.RotateRight();
+		piece = piece.GetRightRotation();
 	else if (IsKeyPressed(KEY_T))
-		currentPiece.RotateHalfCircle();
+		piece = piece.GetHalfCircleRotation();
 
 	//movement
 	Vector2Int movement = { 0, 0 };
@@ -109,7 +112,7 @@ void SceneGame::UpdateGameplay()
 
 			Vector2Int newPiecePosition = { currentPiecePosition.x + movement.x, currentPiecePosition.y + movement.y };
 
-			if (CanPieceExistAt(currentPiece, newPiecePosition))
+			if (CanPieceExistAt(piece, newPiecePosition))
 			{
 				currentPiecePosition = newPiecePosition;
 				positionSuccess = true;
@@ -119,19 +122,11 @@ void SceneGame::UpdateGameplay()
 		}
 	}
 	else
-		positionSuccess = CanPieceExistAt(currentPiece, currentPiecePosition);
+		positionSuccess = CanPieceExistAt(piece, currentPiecePosition);
 
-	//if new position is not successful
-	if (!positionSuccess)
-	{
-		//backtrack rotation
-		if (IsKeyPressed(KEY_E))
-			currentPiece.RotateRight();
-		else if (IsKeyPressed(KEY_R))
-			currentPiece.RotateLeft();
-		else if (IsKeyPressed(KEY_T))
-			currentPiece.RotateHalfCircle();
-	}
+	//if new position is successful
+	if (positionSuccess) //for rotations
+		currentPiece = piece;
 
 	if (IsKeyPressed(KEY_SPACE))
 	{
@@ -141,7 +136,7 @@ void SceneGame::UpdateGameplay()
 		if (!CanPieceExistAt(currentPiece, currentPiecePosition))
 			EndGame();
 	}
-	else if (IsKeyPressed(KEY_C))
+	else if (IsKeyPressed(KEY_C) && !hasSwitchedPiece)
 		HoldPiece();
 	else
 	{
@@ -271,6 +266,8 @@ void SceneGame::PlacePiece()
 		grid[currentPiecePosition.y + currentPiece.blockOffsets[i].y][currentPiecePosition.x + currentPiece.blockOffsets[i].x] = currentPiece.blockColors[i];
 	}
 
+	hasSwitchedPiece = false;
+
 	std::cout << "Placed piece!" << std::endl;
 
 	NextPiece();
@@ -291,6 +288,7 @@ void SceneGame::HoldPiece()
 
 	currentPiecePosition = { gameModifiers.GridSize.x / 2 , 0 };
 	gravityPieceDeltaTime = 0.0f;
+	hasSwitchedPiece = true;
 
 	std::cout << "Hold piece" << std::endl;
 }
@@ -343,7 +341,8 @@ void SceneGame::ClearLine(int line)
 
 void SceneGame::Draw()
 {
-	//prototype
+	//TODO: prototype, will improve soon
+
 	int screenWidth = gameWindow.GetWidth();
 	int screenHeight = gameWindow.GetHeight();
 
@@ -351,6 +350,10 @@ void SceneGame::Draw()
 
 	Vector2 totalGridSize = { blockSize * gameModifiers.GridSize.x, blockSize * gameModifiers.GridSize.y };
 	float startGridPosX = ((float)screenWidth - totalGridSize.x) / 2.0f;
+
+	//Block pieces
+	raylib::Texture2D& blockTexture = GetTexture("BlockPiece");
+	raylib::Rectangle blockTextureSource = { 0.0f, 0.0f, (float)blockTexture.width, (float)blockTexture.height };
 
 	//Draw grid
 	for (int y = 0; y < gameModifiers.GridSize.y; y++)
@@ -361,32 +364,38 @@ void SceneGame::Draw()
 				continue;
 
 			raylib::Rectangle rect = { startGridPosX + blockSize * x, blockSize * y, blockSize, blockSize };
-			rect.Draw(grid[y][x]);
+
+			blockTexture.Draw(blockTextureSource, rect, { 0.0f, 0.0f }, 0.0f, grid[y][x]);
 		}
 	}
 
-	//Draw current piece
-	for (int i = 0; i < currentPiece.numBlocks; i++)
+	if (!gameOver)
 	{
-		raylib::Rectangle rect = { startGridPosX + blockSize * (currentPiecePosition.x + currentPiece.blockOffsets[i].x), blockSize * (currentPiecePosition.y + currentPiece.blockOffsets[i].y), blockSize, blockSize};
-		rect.Draw(currentPiece.blockColors[i]);
-	}
-
-	if (gameModifiers.ShowPiecePreview)
-	{
-		//Draw current piece preview
-		Vector2Int previewPosition = currentPiecePosition;
-
-		//move preview position downwards until it hits the grid
-		while (CanPieceExistAt(currentPiece, { previewPosition.x, previewPosition.y + 1 }))
-		{
-			previewPosition = { previewPosition.x, previewPosition.y + 1 };
-		}
-
+		//Draw current piece
 		for (int i = 0; i < currentPiece.numBlocks; i++)
 		{
-			raylib::Rectangle rect = { startGridPosX + blockSize * (previewPosition.x + currentPiece.blockOffsets[i].x), blockSize * (previewPosition.y + currentPiece.blockOffsets[i].y), blockSize, blockSize };
-			rect.Draw(Fade(currentPiece.blockColors[i], 0.5f));
+			raylib::Rectangle rect = { startGridPosX + blockSize * (currentPiecePosition.x + currentPiece.blockOffsets[i].x), blockSize * (currentPiecePosition.y + currentPiece.blockOffsets[i].y), blockSize, blockSize};
+
+			blockTexture.Draw(blockTextureSource, rect, { 0.0f, 0.0f }, 0.0f, currentPiece.blockColors[i]);
+		}
+
+		if (gameModifiers.ShowPiecePreview)
+		{
+			//Draw current piece preview
+			Vector2Int previewPosition = currentPiecePosition;
+
+			//move preview position downwards until it hits the grid
+			while (CanPieceExistAt(currentPiece, { previewPosition.x, previewPosition.y + 1 }))
+			{
+				previewPosition = { previewPosition.x, previewPosition.y + 1 };
+			}
+
+			for (int i = 0; i < currentPiece.numBlocks; i++)
+			{
+				raylib::Rectangle rect = { startGridPosX + blockSize * (previewPosition.x + currentPiece.blockOffsets[i].x), blockSize * (previewPosition.y + currentPiece.blockOffsets[i].y), blockSize, blockSize };
+
+				blockTexture.Draw(blockTextureSource, rect, { 0.0f, 0.0f }, 0.0f, Fade(currentPiece.blockColors[i], 0.3f));
+			}
 		}
 	}
 
@@ -394,11 +403,47 @@ void SceneGame::Draw()
 	borderColor.DrawLine({ startGridPosX, 0 }, { startGridPosX, (float)screenHeight }, 4.0f);
 	borderColor.DrawLine({ startGridPosX + totalGridSize.x, 0 }, { startGridPosX + totalGridSize.x, (float)screenHeight }, 4.0f);
 
+	//held piece
+	std::string holdText = "HELD";
+	int holdTextFontSize = 36;
+	int holdTextWidth = raylib::MeasureText(holdText, holdTextFontSize);
+	raylib::DrawText(holdText, startGridPosX - holdTextWidth - 10, 0, holdTextFontSize, raylib::Color::White());
+
+	raylib::Rectangle heldPieceBounds = holdingPiece.GetBounds();
+	int holdPieceStartX = startGridPosX - holdTextWidth / 2.0f - 10;
+	for (int i = 0; i < holdingPiece.numBlocks; i++)
+	{
+		raylib::Rectangle rect = { holdPieceStartX + blockSize * (holdingPiece.blockOffsets[i].x - (heldPieceBounds.x + heldPieceBounds.width) / 2.0f), holdTextFontSize + blockSize * (holdingPiece.blockOffsets[i].y - heldPieceBounds.y), blockSize, blockSize };
+
+		blockTexture.Draw(blockTextureSource, rect, { 0.0f, 0.0f }, 0.0f, holdingPiece.blockColors[i]);
+	}
+
+	//up and coming pieces
+	std::string nextText = "NEXT";
+	int nextTextFontSize = 36;
+	int nextTextWidth = raylib::MeasureText(nextText, nextTextFontSize);
+	raylib::DrawText(nextText, startGridPosX - nextTextWidth - 10, holdTextFontSize + 4 * blockSize + 10, nextTextFontSize, raylib::Color::White());
+	
+	int nextPieceStartX = startGridPosX - nextTextWidth / 2.0f - 10;
+	for (int pieceIndex = 0; pieceIndex < gameModifiers.NumUpAndComingPieces; pieceIndex++)
+	{
+		int pieceStartY = holdTextFontSize + nextTextFontSize + (4 * blockSize + 10) * (pieceIndex + 1);
+		raylib::Rectangle pieceBounds = upAndComingPieces[pieceIndex].GetBounds();
+
+		for (int i = 0; i < upAndComingPieces[pieceIndex].numBlocks; i++)
+		{
+			raylib::Rectangle rect = { holdPieceStartX + blockSize * (upAndComingPieces[pieceIndex].blockOffsets[i].x - (pieceBounds.x + pieceBounds.width) / 2.0f), pieceStartY + blockSize * (upAndComingPieces[pieceIndex].blockOffsets[i].y - pieceBounds.y * 1.5f), blockSize, blockSize };
+
+			blockTexture.Draw(blockTextureSource, rect, { 0.0f, 0.0f }, 0.0f, upAndComingPieces[pieceIndex].blockColors[i]);
+		}
+	}
+
 	//Draw score
 	raylib::DrawText("Score: " + std::to_string(score), startGridPosX + totalGridSize.x + 10, 0, 36, raylib::Color::White());
 	raylib::DrawText("Level: " + std::to_string(level), startGridPosX + totalGridSize.x + 10, 36, 36, raylib::Color::White());
 	raylib::DrawText("Cleared: " + std::to_string(totalLinesCleared), startGridPosX + totalGridSize.x + 10, 36 * 2, 36, raylib::Color::White());
 	raylib::DrawText("Time: " + std::to_string(timePlayingSeconds), startGridPosX + totalGridSize.x + 10, 36 * 3, 36, raylib::Color::White());
+	raylib::DrawText("Switched piece: " + std::to_string(hasSwitchedPiece), startGridPosX + totalGridSize.x + 10, 36 * 4, 36, (hasSwitchedPiece ? raylib::Color::Red() : raylib::Color::White()));
 }
 
 void SceneGame::Destroy()

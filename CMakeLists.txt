@@ -51,6 +51,7 @@ if (NOT raylib_cpp_FOUND)
   endif()
 endif()
 
+
 # Main
 set(
 	SOURCES 
@@ -58,7 +59,7 @@ set(
     "source/Game/Piece.cpp" 
     "source/Game/SceneGame.cpp"
     "source/Game/SceneManager.cpp"
-)
+ "source/Assets.cpp")
 
 set(
 	INCLUDE_DIRECTORIES 
@@ -98,6 +99,12 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRECTORIES})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 11)
 target_link_libraries(${PROJECT_NAME} PUBLIC raylib raylib_cpp)
+
+# Copy assets folder to build folder
+add_custom_target(copy_assets
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_LIST_DIR}/assets ${CMAKE_CURRENT_BINARY_DIR}/assets
+)
+add_dependencies(${PROJECT_NAME} copy_assets)
 
 # Web Configurations
 if (${PLATFORM} MATCHES "Web")

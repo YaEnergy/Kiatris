@@ -2,6 +2,7 @@
 //
 
 #include "Kiatris.h"
+#include "Assets.h"
 #include "raylib-cpp.hpp"
 #include "Game/SceneManager.h"
 #include "Game/SceneGame.h"
@@ -33,6 +34,8 @@ class Game
 			sceneManager.SetScene(&gameScene);
 			
 			window.SetState(FLAG_WINDOW_RESIZABLE);
+
+			LoadAssets();
 			//TODO: loading assets, flags, init, Emscripten modifications, audio device
 
 			while (!window.ShouldClose())
@@ -40,7 +43,7 @@ class Game
 				UpdateDrawFrame();
 			}
 
-			//window and audio device are closed automatically
+			//window, audio device and assets are closed and unloaded automatically
 		}
 };
 

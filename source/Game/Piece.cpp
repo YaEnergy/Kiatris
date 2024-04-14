@@ -1,42 +1,57 @@
 #include "Game/Piece.h"
 
-void Piece::RotateLeft()
+Piece Piece::GetLeftRotation() const
 {
+	Piece rotatedPiece = Piece(numBlocks);
+	rotatedPiece.pivotOffset = pivotOffset;
+
 	//rotating around pivot
 	//90 degrees counter-clockwise rotation
 	for (int i = 0; i < numBlocks; i++)
 	{
-		int newX = (int)(-blockOffsets[i].y + pivotOffset.y + pivotOffset.x);
-		int newY = (int)(blockOffsets[i].x - pivotOffset.x + pivotOffset.y);
+		rotatedPiece.blockColors[i] = blockColors[i];
 
-		blockOffsets[i].x = newX;
-		blockOffsets[i].y = newY;
+		rotatedPiece.blockOffsets[i].x = (int)(-blockOffsets[i].y + pivotOffset.y + pivotOffset.x);
+		rotatedPiece.blockOffsets[i].y = (int)(blockOffsets[i].x - pivotOffset.x + pivotOffset.y);
 	}
+
+	return rotatedPiece;
 }
 
-void Piece::RotateRight()
+Piece Piece::GetRightRotation() const
 {
+	Piece rotatedPiece = Piece(numBlocks);
+	rotatedPiece.pivotOffset = pivotOffset;
+
 	//rotating around pivot
 	//90 degrees clockwise rotation
 	for (int i = 0; i < numBlocks; i++)
 	{
-		int newX = (int)(blockOffsets[i].y - pivotOffset.y + pivotOffset.x);
-		int newY = (int)(-blockOffsets[i].x + pivotOffset.x + pivotOffset.y);
+		rotatedPiece.blockColors[i] = blockColors[i];
 
-		blockOffsets[i].x = newX;
-		blockOffsets[i].y = newY;
+		rotatedPiece.blockOffsets[i].x = (int)(blockOffsets[i].y - pivotOffset.y + pivotOffset.x);
+		rotatedPiece.blockOffsets[i].y = (int)(-blockOffsets[i].x + pivotOffset.x + pivotOffset.y);
 	}
+
+	return rotatedPiece;
 }
 
-void Piece::RotateHalfCircle()
+Piece Piece::GetHalfCircleRotation() const
 {
+	Piece rotatedPiece = Piece(numBlocks);
+	rotatedPiece.pivotOffset = pivotOffset;
+
 	//180 degrees rotation, doesn't matter if it's clockwise or counter-clockwise
 	//newX - pivotX = -(oldX - pivotX)
 	for (int i = 0; i < numBlocks; i++)
 	{
-		blockOffsets[i].x = -blockOffsets[i].x + (int)(2 * pivotOffset.x);
-		blockOffsets[i].y = -blockOffsets[i].y + (int)(2 * pivotOffset.y);
+		rotatedPiece.blockColors[i] = blockColors[i];
+
+		rotatedPiece.blockOffsets[i].x = -blockOffsets[i].x + (int)(2 * pivotOffset.x);
+		rotatedPiece.blockOffsets[i].y = -blockOffsets[i].y + (int)(2 * pivotOffset.y);
 	}
+
+	return rotatedPiece;
 }
 
 Vector2Int Piece::Measure() const
