@@ -29,7 +29,7 @@ class Game
 	public:
 		Game() : window(DESIGN_WIDTH, DESIGN_HEIGHT, "Kiatris"), audioDevice()
 		{
-			SceneGame gameScene(window, { GAMEMODE_ENDLESS, 3, {10, 20} });
+			SceneGame gameScene(window, { GAMEMODE_ENDLESS, 3, {10, 20}, true});
 			sceneManager.SetScene(&gameScene);
 			
 			window.SetState(FLAG_WINDOW_RESIZABLE);

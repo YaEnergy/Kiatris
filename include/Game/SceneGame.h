@@ -39,7 +39,7 @@ class SceneGame : public Scene
 
 		//Pieces
 		Piece GetRandomPiece();
-		bool CanPieceExistAt(Vector2Int position);
+		bool CanPieceExistAt(Piece piece, Vector2Int position);
 
 		void NextPiece();
 		void PlacePiece();

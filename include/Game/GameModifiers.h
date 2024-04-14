@@ -13,4 +13,5 @@ struct GameModifiers
 	GameMode Mode;
 	int NumUpAndComingPieces;
 	Vector2Int GridSize;
+	bool ShowPiecePreview;
 };

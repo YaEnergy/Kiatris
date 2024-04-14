@@ -109,7 +109,7 @@ void SceneGame::UpdateGameplay()
 
 			Vector2Int newPiecePosition = { currentPiecePosition.x + movement.x, currentPiecePosition.y + movement.y };
 
-			if (CanPieceExistAt(newPiecePosition))
+			if (CanPieceExistAt(currentPiece, newPiecePosition))
 			{
 				currentPiecePosition = newPiecePosition;
 				positionSuccess = true;
@@ -119,7 +119,7 @@ void SceneGame::UpdateGameplay()
 		}
 	}
 	else
-		positionSuccess = CanPieceExistAt(currentPiecePosition);
+		positionSuccess = CanPieceExistAt(currentPiece, currentPiecePosition);
 
 	//if new position is not successful
 	if (!positionSuccess)
@@ -138,7 +138,7 @@ void SceneGame::UpdateGameplay()
 		HardDropPiece();
 		PlacePiece();
 
-		if (!CanPieceExistAt(currentPiecePosition))
+		if (!CanPieceExistAt(currentPiece, currentPiecePosition))
 			EndGame();
 	}
 	else if (IsKeyPressed(KEY_C))
@@ -155,7 +155,7 @@ void SceneGame::UpdateGameplay()
 		{
 			gravityPieceDeltaTime -= gravityMovementTime;
 
-			if (CanPieceExistAt({ currentPiecePosition.x, currentPiecePosition.y + 1 }))
+			if (CanPieceExistAt(currentPiece, { currentPiecePosition.x, currentPiecePosition.y + 1 }))
 				currentPiecePosition = { currentPiecePosition.x, currentPiecePosition.y + 1 };
 			else
 			{
@@ -164,7 +164,7 @@ void SceneGame::UpdateGameplay()
 			}
 		}
 
-		if (!CanPieceExistAt(currentPiecePosition))
+		if (!CanPieceExistAt(currentPiece, currentPiecePosition))
 			EndGame();
 	}
 
@@ -226,12 +226,12 @@ Piece SceneGame::GetRandomPiece()
 	return Piece::GetMainPiece((MainPieceType)GetRandomValue(0, 6));
 }
 
-bool SceneGame::CanPieceExistAt(Vector2Int position)
+bool SceneGame::CanPieceExistAt(Piece piece, Vector2Int position)
 {
 	//if any block is out of bounds or not empty, then the piece can not exist at this position
-	for (int i = 0; i < currentPiece.numBlocks; i++)
+	for (int i = 0; i < piece.numBlocks; i++)
 	{
-		if (!IsCellEmpty(position.x + currentPiece.blockOffsets[i].x, position.y + currentPiece.blockOffsets[i].y))
+		if (!IsCellEmpty(position.x + piece.blockOffsets[i].x, position.y + piece.blockOffsets[i].y))
 			return false;
 	}
 
@@ -298,7 +298,7 @@ void SceneGame::HoldPiece()
 void SceneGame::HardDropPiece()
 {
 	//Instantly move piece downwards until it can't anymore
-	while (CanPieceExistAt({ currentPiecePosition.x, currentPiecePosition.y + 1 }))
+	while (CanPieceExistAt(currentPiece, { currentPiecePosition.x, currentPiecePosition.y + 1 }))
 		currentPiecePosition = { currentPiecePosition.x, currentPiecePosition.y + 1 };
 
 	std::cout << "Hard drop piece" << std::endl;
@@ -370,6 +370,24 @@ void SceneGame::Draw()
 	{
 		raylib::Rectangle rect = { startGridPosX + blockSize * (currentPiecePosition.x + currentPiece.blockOffsets[i].x), blockSize * (currentPiecePosition.y + currentPiece.blockOffsets[i].y), blockSize, blockSize};
 		rect.Draw(currentPiece.blockColors[i]);
+	}
+
+	if (gameModifiers.ShowPiecePreview)
+	{
+		//Draw current piece preview
+		Vector2Int previewPosition = currentPiecePosition;
+
+		//move preview position downwards until it hits the grid
+		while (CanPieceExistAt(currentPiece, { previewPosition.x, previewPosition.y + 1 }))
+		{
+			previewPosition = { previewPosition.x, previewPosition.y + 1 };
+		}
+
+		for (int i = 0; i < currentPiece.numBlocks; i++)
+		{
+			raylib::Rectangle rect = { startGridPosX + blockSize * (previewPosition.x + currentPiece.blockOffsets[i].x), blockSize * (previewPosition.y + currentPiece.blockOffsets[i].y), blockSize, blockSize };
+			rect.Draw(Fade(currentPiece.blockColors[i], 0.5f));
+		}
 	}
 
 	raylib::Color borderColor = raylib::Color::Gray();
