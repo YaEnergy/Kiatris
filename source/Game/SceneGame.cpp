@@ -43,6 +43,7 @@ void SceneGame::StartGame(GameModifiers modifiers)
 	level = 0;
 
 	//pieces
+	holdingPiece = Piece(0); //no piece
 	upAndComingPieces = std::vector<Piece>(modifiers.NumUpAndComingPieces);
 	for (int i = 0; i < modifiers.NumUpAndComingPieces; i++)
 		upAndComingPieces[i] = GetRandomPiece();
@@ -343,10 +344,19 @@ void SceneGame::Draw()
 {
 	//TODO: prototype, will improve soon
 
+
 	int screenWidth = gameWindow.GetWidth();
 	int screenHeight = gameWindow.GetHeight();
 
-	float blockSize = std::min((float)(screenWidth / gameModifiers.GridSize.x), (float)(screenHeight / gameModifiers.GridSize.y));
+	int fieldXPadding = screenWidth / 4;
+	int fieldYPadding = screenHeight / 10;
+
+	//left and right 25% safe zone for ui (50%)
+	//top and bottom 10% safe zone for padding (20%)
+	int fieldWidth = screenWidth - fieldXPadding;
+	int fieldHeight = screenHeight - fieldYPadding * 2;
+
+	float blockSize = std::min((float)(fieldWidth / gameModifiers.GridSize.x), (float)(fieldHeight / gameModifiers.GridSize.y));
 
 	Vector2 totalGridSize = { blockSize * gameModifiers.GridSize.x, blockSize * gameModifiers.GridSize.y };
 	float startGridPosX = ((float)screenWidth - totalGridSize.x) / 2.0f;
@@ -363,7 +373,7 @@ void SceneGame::Draw()
 			if (grid[y][x] == EMPTY_BLOCK_COLOR)
 				continue;
 
-			raylib::Rectangle rect = { startGridPosX + blockSize * x, blockSize * y, blockSize, blockSize };
+			raylib::Rectangle rect = { startGridPosX + blockSize * x, blockSize * y + fieldYPadding, blockSize, blockSize };
 
 			blockTexture.Draw(blockTextureSource, rect, { 0.0f, 0.0f }, 0.0f, grid[y][x]);
 		}
@@ -374,7 +384,7 @@ void SceneGame::Draw()
 		//Draw current piece
 		for (int i = 0; i < currentPiece.numBlocks; i++)
 		{
-			raylib::Rectangle rect = { startGridPosX + blockSize * (currentPiecePosition.x + currentPiece.blockOffsets[i].x), blockSize * (currentPiecePosition.y + currentPiece.blockOffsets[i].y), blockSize, blockSize};
+			raylib::Rectangle rect = { startGridPosX + blockSize * (currentPiecePosition.x + currentPiece.blockOffsets[i].x), blockSize * (currentPiecePosition.y + currentPiece.blockOffsets[i].y) + fieldYPadding, blockSize, blockSize};
 
 			blockTexture.Draw(blockTextureSource, rect, { 0.0f, 0.0f }, 0.0f, currentPiece.blockColors[i]);
 		}
@@ -392,7 +402,7 @@ void SceneGame::Draw()
 
 			for (int i = 0; i < currentPiece.numBlocks; i++)
 			{
-				raylib::Rectangle rect = { startGridPosX + blockSize * (previewPosition.x + currentPiece.blockOffsets[i].x), blockSize * (previewPosition.y + currentPiece.blockOffsets[i].y), blockSize, blockSize };
+				raylib::Rectangle rect = { startGridPosX + blockSize * (previewPosition.x + currentPiece.blockOffsets[i].x), blockSize * (previewPosition.y + currentPiece.blockOffsets[i].y) + fieldYPadding, blockSize, blockSize };
 
 				blockTexture.Draw(blockTextureSource, rect, { 0.0f, 0.0f }, 0.0f, Fade(currentPiece.blockColors[i], 0.3f));
 			}
@@ -400,8 +410,10 @@ void SceneGame::Draw()
 	}
 
 	raylib::Color borderColor = raylib::Color::Gray();
-	borderColor.DrawLine({ startGridPosX, 0 }, { startGridPosX, (float)screenHeight }, 4.0f);
-	borderColor.DrawLine({ startGridPosX + totalGridSize.x, 0 }, { startGridPosX + totalGridSize.x, (float)screenHeight }, 4.0f);
+	borderColor.DrawLine({ startGridPosX, (float)fieldYPadding }, { startGridPosX, (float)(screenHeight - fieldYPadding) }, 4.0f);
+	borderColor.DrawLine({ startGridPosX + totalGridSize.x, (float)fieldYPadding }, { startGridPosX + totalGridSize.x, (float)(screenHeight - fieldYPadding) }, 4.0f);
+	borderColor.DrawLine({ startGridPosX, (float)fieldYPadding }, { startGridPosX + totalGridSize.x, (float)fieldYPadding }, 4.0f);
+	borderColor.DrawLine({ startGridPosX, (float)(screenHeight - fieldYPadding) }, { startGridPosX + totalGridSize.x, (float)(screenHeight - fieldYPadding) }, 4.0f);
 
 	//held piece
 	std::string holdText = "HELD";
@@ -432,7 +444,7 @@ void SceneGame::Draw()
 
 		for (int i = 0; i < upAndComingPieces[pieceIndex].numBlocks; i++)
 		{
-			raylib::Rectangle rect = { holdPieceStartX + blockSize * (upAndComingPieces[pieceIndex].blockOffsets[i].x - (pieceBounds.x + pieceBounds.width) / 2.0f), pieceStartY + blockSize * (upAndComingPieces[pieceIndex].blockOffsets[i].y - pieceBounds.y * 1.5f), blockSize, blockSize };
+			raylib::Rectangle rect = { holdPieceStartX + blockSize * (upAndComingPieces[pieceIndex].blockOffsets[i].x - upAndComingPieces[pieceIndex].pivotOffset.x - (pieceBounds.x + pieceBounds.width) / 2.0f), pieceStartY + blockSize * (upAndComingPieces[pieceIndex].blockOffsets[i].y - pieceBounds.y * 1.5f), blockSize, blockSize };
 
 			blockTexture.Draw(blockTextureSource, rect, { 0.0f, 0.0f }, 0.0f, upAndComingPieces[pieceIndex].blockColors[i]);
 		}
