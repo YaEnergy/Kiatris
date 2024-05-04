@@ -49,8 +49,10 @@ class SceneGame : public Scene
 		void HardDropPiece();
 
 		//Grid
+		bool IsCellInBounds(int x, int y) const;
 		bool IsCellEmpty(int x, int y); 
 		void ClearLine(int line);
+		void DrawGrid(float x, float y, float blockSize, raylib::Texture2D& blockTexture);
 
 	public:
 		SceneGame(raylib::Window& window, GameModifiers modifiers) : gameWindow(window)
