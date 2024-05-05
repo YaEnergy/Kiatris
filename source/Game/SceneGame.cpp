@@ -2,8 +2,6 @@
 #include "Game/SceneGame.h"
 #include "Assets.h"
 
-const raylib::Color EMPTY_BLOCK_COLOR = raylib::Color::Blank();
-
 void SceneGame::Init()
 {
 	
@@ -32,10 +30,13 @@ void SceneGame::StartGame(GameModifiers modifiers)
 	//main
 	gameModifiers = modifiers;
 	gameOver = false;
+	isClearingLines = false;
+	clearingLines.clear();
 
 	//delta times
 	gravityPieceDeltaTime = 0.0f;
 	movementPieceDeltaTime = 0.0f;
+	deltaLineClearingTime = 0.0f;
 
 	//statistics
 	timePlayingSeconds = 0.0f;
@@ -52,14 +53,14 @@ void SceneGame::StartGame(GameModifiers modifiers)
 	NextPiece();
 
 	//Create grid
-	grid = new raylib::Color*[modifiers.GridSize.y];
+	grid = new BlockCell*[modifiers.GridSize.y];
 	for (int y = 0; y < modifiers.GridSize.y; y++)
 	{
-		grid[y] = new raylib::Color[modifiers.GridSize.x];
+		grid[y] = new BlockCell[modifiers.GridSize.x];
 
 		for (int x = 0; x < modifiers.GridSize.x; x++)
 		{
-			grid[y][x] = raylib::Color::Blank();
+			grid[y][x] = BlockCell(BLOCK_EMPTY, raylib::Color::Blank());
 		}
 	}
 }
@@ -68,12 +69,63 @@ void SceneGame::UpdateGameplay()
 {
 	float deltaTime = gameWindow.GetFrameTime();
 
+	timePlayingSeconds += deltaTime;
+
+	if (isClearingLines)
+	{
+		deltaLineClearingTime += deltaTime;
+
+		//Wait 1 second for anim and then clear line
+		if (deltaLineClearingTime >= 1.0f)
+		{
+			//Clear lines
+			int scoreMultiplier = 0;
+
+			for (int line : clearingLines)
+			{
+				ClearLine(line);
+				totalLinesCleared++;
+
+				if (scoreMultiplier == 0)
+					scoreMultiplier = 1;
+				else
+					scoreMultiplier *= 2;
+			}
+
+			std::cout << "Cleared " + std::to_string(clearingLines.size()) + " line(s) " << std::endl;
+			score += 1000 * scoreMultiplier;
+			isClearingLines = false;
+			clearingLines.clear();
+		}
+		else
+			return;
+	}
+
 	gravityPieceDeltaTime += deltaTime;
 	movementPieceDeltaTime += deltaTime;
-	timePlayingSeconds += deltaTime;
 
 	level = totalLinesCleared / 10;
 
+	UpdatePieceMovement();
+
+	if (IsKeyPressed(KEY_SPACE))
+	{
+		HardDropPiece();
+		PlacePiece();
+
+		if (!CanPieceExistAt(currentPiece, currentPiecePosition))
+			EndGame();
+	}
+	else if (IsKeyPressed(KEY_C) && !hasSwitchedPiece)
+		HoldPiece();
+	else
+		UpdatePieceGravity();
+
+	LineClearCheck();
+}
+
+void SceneGame::UpdatePieceMovement()
+{
 	Piece piece = currentPiece;
 
 	//rotation
@@ -129,46 +181,35 @@ void SceneGame::UpdateGameplay()
 	//if new position is successful
 	if (positionSuccess) //for rotations
 		currentPiece = piece;
+}
 
-	if (IsKeyPressed(KEY_SPACE))
+void SceneGame::UpdatePieceGravity()
+{
+	if (IsKeyPressed(KEY_DOWN))
+		gravityPieceDeltaTime = 1.0f / 20.0f;
+
+	int gravityLevel = std::min(level - 1, 14);
+	float gravityMovementTime = IsKeyDown(KEY_DOWN) ? 1.0f / 20.0f : std::powf(0.8f - ((float)gravityLevel * 0.007f), (float)gravityLevel);
+
+	while (gravityPieceDeltaTime >= gravityMovementTime)
 	{
-		HardDropPiece();
-		PlacePiece();
+		gravityPieceDeltaTime -= gravityMovementTime;
 
-		if (!CanPieceExistAt(currentPiece, currentPiecePosition))
-			EndGame();
-	}
-	else if (IsKeyPressed(KEY_C) && !hasSwitchedPiece)
-		HoldPiece();
-	else
-	{
-		if (IsKeyPressed(KEY_DOWN))
-			gravityPieceDeltaTime = 1.0f / 20.0f;
-
-		int gravityLevel = std::min(level - 1, 14);
-		float gravityMovementTime = IsKeyDown(KEY_DOWN) ? 1.0f / 20.0f : std::powf(0.8f - ((float)gravityLevel * 0.007f), (float)gravityLevel);
-		
-		while (gravityPieceDeltaTime >= gravityMovementTime)
+		if (CanPieceExistAt(currentPiece, { currentPiecePosition.x, currentPiecePosition.y + 1 }))
+			currentPiecePosition = { currentPiecePosition.x, currentPiecePosition.y + 1 };
+		else
 		{
-			gravityPieceDeltaTime -= gravityMovementTime;
-
-			if (CanPieceExistAt(currentPiece, { currentPiecePosition.x, currentPiecePosition.y + 1 }))
-				currentPiecePosition = { currentPiecePosition.x, currentPiecePosition.y + 1 };
-			else
-			{
-				PlacePiece();
-				break;
-			}
+			PlacePiece();
+			break;
 		}
-
-		if (!CanPieceExistAt(currentPiece, currentPiecePosition))
-			EndGame();
 	}
 
-	//line clearing
-	int linesCleared = 0;
-	int scoreMultiplier = 0;
+	if (!CanPieceExistAt(currentPiece, currentPiecePosition))
+		EndGame();
+}
 
+void SceneGame::LineClearCheck()
+{
 	//check all lines
 	for (int y = 0; y < gameModifiers.GridSize.y; y++)
 	{
@@ -176,7 +217,7 @@ void SceneGame::UpdateGameplay()
 
 		for (int x = 0; x < gameModifiers.GridSize.x; x++)
 		{
-			if (IsCellEmpty(x, y))
+			if (grid[y][x].state != BLOCK_GRID)
 			{
 				isClear = false;
 				break;
@@ -185,22 +226,22 @@ void SceneGame::UpdateGameplay()
 
 		if (isClear)
 		{
-			linesCleared += 1;
+			//start line clear animation for blocks
+			for (int x = 0; x < gameModifiers.GridSize.x; x++)
+			{
+				grid[y][x].state = BLOCK_CLEARING;
+			}
 
-			if (linesCleared == 1)
-				scoreMultiplier = 1;
-			else
-				scoreMultiplier *= 4;
-
-			ClearLine(y);
+			clearingLines.push_back(y);
+			isClearingLines = true;
 		}
 	}
 
-	if (linesCleared > 0)
-		std::cout << "Cleared " + std::to_string(linesCleared) + " line(s) " << std::endl;
-
-	totalLinesCleared += linesCleared;
-	score += 1000 * scoreMultiplier;
+	if (isClearingLines)
+	{
+		deltaLineClearingTime = 0.0f;
+		std::cout << "Clearing " + std::to_string(clearingLines.size()) + " line(s) " << std::endl;
+	}
 }
 
 void SceneGame::UpdateGameOver()
@@ -259,13 +300,11 @@ void SceneGame::PlacePiece()
 	//Place piece into grid
 	for (int i = 0; i < currentPiece.numBlocks; i++)
 	{
-		if (currentPiecePosition.y + currentPiece.blockOffsets[i].y >= gameModifiers.GridSize.y || currentPiecePosition.y + currentPiece.blockOffsets[i].y < 0)
+		if (!IsCellInBounds(currentPiecePosition.x + currentPiece.blockOffsets[i].x, currentPiecePosition.y + currentPiece.blockOffsets[i].y))
 			continue;
 
-		if (currentPiecePosition.x + currentPiece.blockOffsets[i].x >= gameModifiers.GridSize.x || currentPiecePosition.x + currentPiece.blockOffsets[i].x < 0)
-			continue;
-
-		grid[currentPiecePosition.y + currentPiece.blockOffsets[i].y][currentPiecePosition.x + currentPiece.blockOffsets[i].x] = currentPiece.blockColors[i];
+		grid[currentPiecePosition.y + currentPiece.blockOffsets[i].y][currentPiecePosition.x + currentPiece.blockOffsets[i].x].color = currentPiece.blockColors[i];
+		grid[currentPiecePosition.y + currentPiece.blockOffsets[i].y][currentPiecePosition.x + currentPiece.blockOffsets[i].x].state = BLOCK_GRID;
 	}
 
 	hasSwitchedPiece = false;
@@ -322,7 +361,7 @@ bool SceneGame::IsCellEmpty(int x, int y)
 	if (y < 0)
 		return true;
 
-	return grid[y][x] == EMPTY_BLOCK_COLOR;
+	return grid[y][x].state == BLOCK_EMPTY;
 }
 
 void SceneGame::ClearLine(int line)
@@ -338,7 +377,7 @@ void SceneGame::ClearLine(int line)
 
 	//clear line 0
 	for (int x = 0; x < gameModifiers.GridSize.x; x++)
-		grid[0][x] = EMPTY_BLOCK_COLOR;
+		grid[0][x].state = BLOCK_EMPTY;
 	
 	std::cout << "Cleared line " + std::to_string(line) << std::endl;
 }
@@ -352,16 +391,30 @@ void SceneGame::DrawGrid(float posX, float posY, float blockSize, raylib::Textur
 	{
 		for (int gridX = 0; gridX < gameModifiers.GridSize.x; gridX++)
 		{
-			if (grid[gridY][gridX] == EMPTY_BLOCK_COLOR)
+			if (grid[gridY][gridX].state == BLOCK_EMPTY)
 				continue;
 
 			raylib::Rectangle rect = { posX + blockSize * gridX, posY + blockSize * gridY, blockSize, blockSize };
+			raylib::Color blockColor = grid[gridY][gridX].color;
+			
+			switch (grid[gridY][gridX].state)
+			{
+				case BLOCK_GRID:
+					blockTexture.Draw(blockTextureSource, rect, { 0.0f, 0.0f }, 0.0f, blockColor);
+					break;
+				case BLOCK_CLEARING:
+					if (deltaLineClearingTime <= 0.25f || (deltaLineClearingTime >= 0.5f && deltaLineClearingTime <= 0.75f))
+						blockColor = blockColor.Tint(raylib::Color::Red());
 
-			blockTexture.Draw(blockTextureSource, rect, { 0.0f, 0.0f }, 0.0f, grid[gridY][gridX]);
+					blockTexture.Draw(blockTextureSource, rect, { 0.0f, 0.0f }, 0.0f, blockColor);
+					break;
+				default:
+					break;
+			}
 		}
 	}
 
-	if (!gameOver)
+	if (!gameOver && !isClearingLines)
 	{
 		//Draw current piece
 		for (int i = 0; i < currentPiece.numBlocks; i++)
@@ -387,22 +440,15 @@ void SceneGame::DrawGrid(float posX, float posY, float blockSize, raylib::Textur
 
 			for (int i = 0; i < currentPiece.numBlocks; i++)
 			{
+				if (!IsCellInBounds(previewPosition.x + currentPiece.blockOffsets[i].x, previewPosition.y + currentPiece.blockOffsets[i].y))
+					continue;
+
 				raylib::Rectangle rect = { posX + blockSize * (previewPosition.x + currentPiece.blockOffsets[i].x), posY + blockSize * (previewPosition.y + currentPiece.blockOffsets[i].y), blockSize, blockSize };
 
 				blockTexture.Draw(blockTextureSource, rect, { 0.0f, 0.0f }, 0.0f, Fade(currentPiece.blockColors[i], 0.3f));
 			}
 		}
 	}
-
-	float fieldWidth = gameModifiers.GridSize.x * blockSize;
-	float fieldHeight = gameModifiers.GridSize.y * blockSize;
-
-	//Border
-	raylib::Color borderColor = raylib::Color::Gray();
-	borderColor.DrawLine({ posX, posY }, { posX, posY + fieldHeight }, 4.0f);
-	borderColor.DrawLine({ posX + fieldWidth, posY }, { posX + fieldWidth, posY + fieldHeight }, 4.0f);
-	borderColor.DrawLine({ posX, posY }, { posX + fieldWidth, posY }, 4.0f);
-	borderColor.DrawLine({ posX, posY + fieldHeight }, { posX + fieldWidth, posY + fieldHeight }, 4.0f);
 }
 
 #pragma endregion
@@ -442,6 +488,7 @@ void SceneGame::Draw()
 
 	DrawGrid(gridX, fieldYPadding, blockSize, blockTexture);
 
+
 	//held piece
 	std::string holdText = "HELD";
 	int holdTextFontSize = (int)((float)BASE_FONT_SIZE / raylib::MeasureText(holdText, BASE_FONT_SIZE) * UI_PIECE_LENGTH * blockSize);
@@ -476,13 +523,19 @@ void SceneGame::Draw()
 		}
 	}
 
-	//Draw score
-	/*raylib::DrawText("Score: " + std::to_string(score), fieldX + fieldSize.x + 10, 0, 36, raylib::Color::White());
-	raylib::DrawText("Level: " + std::to_string(level), fieldX + fieldSize.x + 10, 36, 36, raylib::Color::White());
-	raylib::DrawText("Cleared: " + std::to_string(totalLinesCleared), fieldX + fieldSize.x + 10, 36 * 2, 36, raylib::Color::White());
-	raylib::DrawText("Time: " + std::to_string(timePlayingSeconds), fieldX + fieldSize.x + 10, 36 * 3, 36, raylib::Color::White());
-	raylib::DrawText("Switched piece: " + std::to_string(hasSwitchedPiece), fieldX + fieldSize.x + 10, 36 * 4, 36, (hasSwitchedPiece ? raylib::Color::Red() : raylib::Color::White()));
-	*/
+	//Draw stats, temp
+	raylib::DrawText("Score: " + std::to_string(score), 10, 24, 36, raylib::Color::White());
+	raylib::DrawText("Level: " + std::to_string(level), 10, 36 + 24, 36, raylib::Color::White());
+	raylib::DrawText("Cleared: " + std::to_string(totalLinesCleared), 10, 36 * 2 + 24, 36, raylib::Color::White());
+	raylib::DrawText("Time: " + std::to_string(timePlayingSeconds), 10, 36 * 3 + 24, 36, raylib::Color::White());
+	raylib::DrawText("Switched piece: " + std::to_string(hasSwitchedPiece), 10, 36 * 4 + 24, 36, (hasSwitchedPiece ? raylib::Color::Red() : raylib::Color::White()));
+	
+	//Borders
+	raylib::Color borderColor = raylib::Color::SkyBlue();
+	borderColor.DrawLine({ gridX, fieldYPadding }, { gridX, fieldYPadding + gridSize.y }, 4.0f);
+	borderColor.DrawLine({ gridX + gridSize.x, fieldYPadding }, { gridX + gridSize.x, fieldYPadding + gridSize.y }, 4.0f);
+	borderColor.DrawLine({ fieldX, fieldYPadding }, { fieldX + fieldSize.x, fieldYPadding }, 4.0f);
+	borderColor.DrawLine({ gridX, fieldYPadding + gridSize.y }, { gridX + gridSize.x, fieldYPadding + gridSize.y }, 4.0f);
 }
 
 void SceneGame::Destroy()

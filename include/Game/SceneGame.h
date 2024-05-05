@@ -2,6 +2,7 @@
 
 #include "raylib-cpp.hpp"
 #include "Scene.h"
+#include "BlockCell.h"
 #include "Game/Piece.h"
 #include "Game/GameModifiers.h"
 #include <iostream>
@@ -23,7 +24,11 @@ class SceneGame : public Scene
 
 		std::vector<Piece> upAndComingPieces;
 
-		raylib::Color** grid = nullptr;
+		BlockCell** grid = nullptr;
+
+		float deltaLineClearingTime = 0.0f;
+		bool isClearingLines = false;
+		std::vector<int> clearingLines;
 
 		bool gameOver = false;
 
@@ -36,6 +41,9 @@ class SceneGame : public Scene
 		//Gameplay
 		void StartGame(GameModifiers modifiers);
 		void UpdateGameplay();
+		void UpdatePieceMovement();
+		void UpdatePieceGravity();
+		void LineClearCheck();
 		void UpdateGameOver();
 		void EndGame();
 
