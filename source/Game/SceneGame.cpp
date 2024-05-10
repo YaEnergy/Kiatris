@@ -121,8 +121,6 @@ void SceneGame::UpdateGameplay()
 		HoldPiece();
 	else
 		UpdatePieceGravity();
-
-	LineClearCheck();
 }
 
 void SceneGame::UpdatePieceMovement()
@@ -311,6 +309,10 @@ void SceneGame::PlacePiece()
 	hasSwitchedPiece = false;
 
 	std::cout << "Placed piece!" << std::endl;
+
+	//Checks for cleared lines
+	//TODO: only check lines the placed piece affects instead of all lines
+	LineClearCheck();
 
 	NextPiece();
 }
