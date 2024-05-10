@@ -398,10 +398,6 @@ void SceneGame::DrawGrid(float posX, float posY, float blockSize, raylib::Textur
 			raylib::Rectangle rect = { posX + blockSize * gridX, posY + blockSize * gridY, blockSize, blockSize };
 			raylib::Color blockColor = grid[gridY][gridX].color;
 
-			const int FLASH_LENGTH = 6;
-
-			float startFlashTime = (lineClearTimeSeconds - (lineClearTimeSeconds / gameModifiers.GridSize.x) * (FLASH_LENGTH - 2)) / gameModifiers.GridSize.x * (gridX);
-			float endFlashTime = (lineClearTimeSeconds - (lineClearTimeSeconds / gameModifiers.GridSize.x) * (FLASH_LENGTH - 2)) / gameModifiers.GridSize.x * (gridX + FLASH_LENGTH);
 
 			switch (grid[gridY][gridX].state)
 			{
@@ -409,11 +405,17 @@ void SceneGame::DrawGrid(float posX, float posY, float blockSize, raylib::Textur
 					blockTexture.Draw(blockTextureSource, rect, { 0.0f, 0.0f }, 0.0f, blockColor);
 					break;
 				case BLOCK_CLEARING:
+				{
+					const int FLASH_LENGTH = 6;
+
+					float startFlashTime = (lineClearTimeSeconds - (lineClearTimeSeconds / gameModifiers.GridSize.x) * (FLASH_LENGTH - 2)) / gameModifiers.GridSize.x * (gridX);
+					float endFlashTime = (lineClearTimeSeconds - (lineClearTimeSeconds / gameModifiers.GridSize.x) * (FLASH_LENGTH - 2)) / gameModifiers.GridSize.x * (gridX + FLASH_LENGTH);
 
 					if (deltaLineClearingTime < endFlashTime)
 						blockTexture.Draw(blockTextureSource, rect, { 0.0f, 0.0f }, 0.0f, deltaLineClearingTime >= startFlashTime ? raylib::Color::White() : blockColor);
 					
 					break;
+				}
 				default:
 					break;
 			}
@@ -467,11 +469,16 @@ void SceneGame::Draw()
 	const int UI_PIECE_LENGTH = 4;
 	const int BASE_FONT_SIZE = 12;
 
+	float windowTime = gameWindow.GetTime();
+
 	int screenWidth = gameWindow.GetWidth();
 	int screenHeight = gameWindow.GetHeight();
 
 	raylib::Texture2D& blockTexture = GetTexture("BlockPiece");
 	raylib::Rectangle blockTextureSource = { 0.0f, 0.0f, (float)blockTexture.width, (float)blockTexture.height };
+
+	//Background
+	blockTexture.Draw(raylib::Rectangle( windowTime * (float)blockTexture.width, windowTime * (float)blockTexture.height, (float)screenWidth / 1.5f, (float)screenHeight / 1.5f ), { 0, 0, (float)screenWidth, (float)screenHeight }, { 0, 0 }, 0.0f, raylib::Color::DarkBlue());
 
 	//Field
 
@@ -492,6 +499,8 @@ void SceneGame::Draw()
 	Vector2 gridSize = { blockSize * gameModifiers.GridSize.x, blockSize * gameModifiers.GridSize.y };
 	float gridX = ((float)screenWidth - gridSize.x) / 2.0f;
 
+	//Grid background
+	raylib::Rectangle(gridX, fieldYPadding, gridSize.x, gridSize.y).Draw(raylib::Color::Black().Alpha(0.4f));
 	DrawGrid(gridX, fieldYPadding, blockSize, blockTexture);
 
 
