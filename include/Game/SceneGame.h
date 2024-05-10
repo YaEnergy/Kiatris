@@ -26,6 +26,7 @@ class SceneGame : public Scene
 
 		BlockCell** grid = nullptr;
 
+		float lineClearTimeSeconds = 0.25f;
 		float deltaLineClearingTime = 0.0f;
 		bool isClearingLines = false;
 		std::vector<int> clearingLines;

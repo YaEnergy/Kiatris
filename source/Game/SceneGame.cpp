@@ -75,8 +75,8 @@ void SceneGame::UpdateGameplay()
 	{
 		deltaLineClearingTime += deltaTime;
 
-		//Wait 1 second for anim and then clear line
-		if (deltaLineClearingTime >= 1.0f)
+		//Wait LINE_CLEAR_TIME_SECONDS for anim and then clear line
+		if (deltaLineClearingTime >= lineClearTimeSeconds)
 		{
 			//Clear lines
 			int scoreMultiplier = 0;
@@ -105,6 +105,7 @@ void SceneGame::UpdateGameplay()
 	movementPieceDeltaTime += deltaTime;
 
 	level = totalLinesCleared / 10;
+	lineClearTimeSeconds = std::max(1.0f - 0.1f * level, 0.1f);
 
 	UpdatePieceMovement();
 
@@ -396,17 +397,22 @@ void SceneGame::DrawGrid(float posX, float posY, float blockSize, raylib::Textur
 
 			raylib::Rectangle rect = { posX + blockSize * gridX, posY + blockSize * gridY, blockSize, blockSize };
 			raylib::Color blockColor = grid[gridY][gridX].color;
-			
+
+			const int FLASH_LENGTH = 6;
+
+			float startFlashTime = (lineClearTimeSeconds - (lineClearTimeSeconds / gameModifiers.GridSize.x) * (FLASH_LENGTH - 2)) / gameModifiers.GridSize.x * (gridX);
+			float endFlashTime = (lineClearTimeSeconds - (lineClearTimeSeconds / gameModifiers.GridSize.x) * (FLASH_LENGTH - 2)) / gameModifiers.GridSize.x * (gridX + FLASH_LENGTH);
+
 			switch (grid[gridY][gridX].state)
 			{
 				case BLOCK_GRID:
 					blockTexture.Draw(blockTextureSource, rect, { 0.0f, 0.0f }, 0.0f, blockColor);
 					break;
 				case BLOCK_CLEARING:
-					if (deltaLineClearingTime <= 0.25f || (deltaLineClearingTime >= 0.5f && deltaLineClearingTime <= 0.75f))
-						blockColor = blockColor.Tint(raylib::Color::Red());
 
-					blockTexture.Draw(blockTextureSource, rect, { 0.0f, 0.0f }, 0.0f, blockColor);
+					if (deltaLineClearingTime < endFlashTime)
+						blockTexture.Draw(blockTextureSource, rect, { 0.0f, 0.0f }, 0.0f, deltaLineClearingTime >= startFlashTime ? raylib::Color::White() : blockColor);
+					
 					break;
 				default:
 					break;
