@@ -79,6 +79,7 @@ void SceneGame::UpdateGameplay()
 		if (deltaLineClearingTime >= lineClearTimeSeconds)
 		{
 			//Clear lines
+			GetSound("LineClear").Play();
 			int scoreMultiplier = 0;
 
 			for (int line : clearingLines)
@@ -95,6 +96,14 @@ void SceneGame::UpdateGameplay()
 			std::cout << "Cleared " + std::to_string(clearingLines.size()) + " line(s) " << std::endl;
 			score += 1000 * scoreMultiplier;
 			isClearingLines = false;
+
+			//Level up every total 10 lines cleared
+			if (totalLinesCleared / 10 != (totalLinesCleared - clearingLines.size()) / 10)
+			{
+				GetSound("LevelUp").Play();
+				level++;
+			}
+
 			clearingLines.clear();
 		}
 		else
@@ -104,7 +113,6 @@ void SceneGame::UpdateGameplay()
 	gravityPieceDeltaTime += deltaTime;
 	movementPieceDeltaTime += deltaTime;
 
-	level = totalLinesCleared / 10;
 	lineClearTimeSeconds = std::max(1.0f - 0.1f * level, 0.1f);
 
 	UpdatePieceMovement();
@@ -251,6 +259,7 @@ void SceneGame::UpdateGameOver()
 
 void SceneGame::EndGame()
 {
+	GetSound("GameOver").Play();
 	gameOver = true;
 }
 
@@ -313,6 +322,8 @@ void SceneGame::PlacePiece()
 	//Checks for cleared lines
 	//TODO: only check lines the placed piece affects instead of all lines
 	LineClearCheck();
+
+	GetSound("PlacePiece").Play();
 
 	NextPiece();
 }
@@ -480,7 +491,7 @@ void SceneGame::Draw()
 	raylib::Rectangle blockTextureSource = { 0.0f, 0.0f, (float)blockTexture.width, (float)blockTexture.height };
 
 	//Background
-	blockTexture.Draw(raylib::Rectangle( windowTime * (float)blockTexture.width, windowTime * (float)blockTexture.height, (float)screenWidth / 1.5f, (float)screenHeight / 1.5f ), { 0, 0, (float)screenWidth, (float)screenHeight }, { 0, 0 }, 0.0f, raylib::Color::DarkBlue());
+	blockTexture.Draw(raylib::Rectangle( Wrap(windowTime, 0.0f, 1.0f) * (float)blockTexture.width, Wrap(windowTime, 0.0f, 1.0f) * (float)blockTexture.height, (float)screenWidth / 1.5f, (float)screenHeight / 1.5f ), { 0, 0, (float)screenWidth, (float)screenHeight }, { 0, 0 }, 0.0f, raylib::Color::DarkBlue());
 
 	//Field
 

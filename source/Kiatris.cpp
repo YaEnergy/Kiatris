@@ -30,20 +30,26 @@ class Game
 	public:
 		Game() : window(DESIGN_WIDTH, DESIGN_HEIGHT, "Kiatris"), audioDevice()
 		{
+			raylib::Image icon = raylib::Image("assets/Kiatris_icon.png");
+			window.SetIcon(icon);
+
 			SceneGame gameScene(window, { GAMEMODE_ENDLESS, 3, {10, 20}, true});
 			sceneManager.SetScene(&gameScene);
 			
 			window.SetState(FLAG_WINDOW_RESIZABLE);
 
 			LoadAssets();
+
 			//TODO: loading assets, flags, init, Emscripten modifications, audio device
 
 			while (!window.ShouldClose())
 			{
 				UpdateDrawFrame();
 			}
-
-			//window, audio device and assets are closed and unloaded automatically
+			
+			icon.Unload();
+			UnloadAssets();
+			//window, audio device are closed and unloaded automatically
 		}
 };
 

@@ -7,4 +7,8 @@
 
 void LoadAssets();
 
+void UnloadAssets();
+
 raylib::Texture2D& GetTexture(std::string name);
+
+raylib::Sound& GetSound(std::string name);
