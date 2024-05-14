@@ -296,7 +296,7 @@ void SceneGame::EndGame()
 
 void SceneGame::DrawGame()
 {
-	//TODO: prototype, will improve soon
+	//TODO: hold and next x offsets!!!
 
 	const int UI_PIECE_LENGTH = 4;
 	const int BASE_FONT_SIZE = 12;
@@ -305,6 +305,8 @@ void SceneGame::DrawGame()
 
 	int screenWidth = gameWindow.GetWidth();
 	int screenHeight = gameWindow.GetHeight();
+
+	raylib::Color gridBackgroundColor = raylib::Color::Black().Alpha(0.4f);
 
 	raylib::Texture2D& blockTexture = GetTexture("BlockPiece");
 	raylib::Rectangle blockTextureSource = { 0.0f, 0.0f, (float)blockTexture.width, (float)blockTexture.height };
@@ -323,7 +325,7 @@ void SceneGame::DrawGame()
 
 	//Grid size + Holding piece + Next pieces
 
-	float blockSize = std::min(maxFieldWidth / (gameModifiers.GridSize.x + UI_PIECE_LENGTH * 2), maxFieldHeight / gameModifiers.GridSize.y);
+	float blockSize = std::min(maxFieldWidth / (gameModifiers.GridSize.x + UI_PIECE_LENGTH * 2), maxFieldHeight / std::max(gameModifiers.GridSize.y, UI_PIECE_LENGTH * gameModifiers.NumUpAndComingPieces + gameModifiers.NumUpAndComingPieces));
 
 	Vector2 fieldSize = { blockSize * (gameModifiers.GridSize.x + UI_PIECE_LENGTH * 2), blockSize * gameModifiers.GridSize.y };
 	float fieldX = ((float)screenWidth - fieldSize.x) / 2.0f;
@@ -332,15 +334,19 @@ void SceneGame::DrawGame()
 	float gridX = ((float)screenWidth - gridSize.x) / 2.0f;
 
 	//Grid background
-	raylib::Rectangle(gridX, fieldYPadding, gridSize.x, gridSize.y).Draw(raylib::Color::Black().Alpha(0.4f));
+	raylib::Rectangle(gridX, fieldYPadding, gridSize.x, gridSize.y).Draw(gridBackgroundColor);
+
 	DrawGrid(gridX, fieldYPadding, blockSize, blockTexture);
 
 
 	//held piece
 	std::string holdText = "HELD";
 	int holdTextFontSize = (int)((float)BASE_FONT_SIZE / raylib::MeasureText(holdText, BASE_FONT_SIZE) * UI_PIECE_LENGTH * blockSize);
-
 	int holdTextWidth = raylib::MeasureText(holdText, holdTextFontSize);
+
+	float holdHeight = blockSize * UI_PIECE_LENGTH + holdTextFontSize;
+	gridBackgroundColor.DrawRectangle({ fieldX, fieldYPadding, blockSize * UI_PIECE_LENGTH, holdHeight });
+
 	raylib::DrawText(holdText, gridX - UI_PIECE_LENGTH * blockSize, fieldYPadding, holdTextFontSize, raylib::Color::White());
 
 	float holdPieceStartX = gridX - 4 * blockSize;
@@ -355,12 +361,16 @@ void SceneGame::DrawGame()
 	std::string nextText = "NEXT";
 	int nextTextFontSize = (int)((float)BASE_FONT_SIZE / raylib::MeasureText(nextText, BASE_FONT_SIZE) * UI_PIECE_LENGTH * blockSize);
 	int nextTextWidth = raylib::MeasureText(nextText, nextTextFontSize);
+
+	float nextHeight = blockSize * (UI_PIECE_LENGTH + 1) * gameModifiers.NumUpAndComingPieces - blockSize + nextTextFontSize;
+	gridBackgroundColor.DrawRectangle({ gridX + gridSize.x, fieldYPadding, blockSize * UI_PIECE_LENGTH, nextHeight });
+
 	raylib::DrawText(nextText, gridX + gridSize.x, fieldYPadding, nextTextFontSize, raylib::Color::White());
 
 	int nextPieceStartX = gridX + gridSize.x;
 	for (int pieceIndex = 0; pieceIndex < gameModifiers.NumUpAndComingPieces; pieceIndex++)
 	{
-		int pieceStartY = fieldYPadding + nextTextFontSize + (UI_PIECE_LENGTH * blockSize) * (pieceIndex);
+		int pieceStartY = fieldYPadding + nextTextFontSize + ((UI_PIECE_LENGTH + 1) * blockSize) * (pieceIndex);
 
 		for (int i = 0; i < upAndComingPieces[pieceIndex].numBlocks; i++)
 		{
@@ -383,6 +393,12 @@ void SceneGame::DrawGame()
 	borderColor.DrawLine({ gridX + gridSize.x, fieldYPadding }, { gridX + gridSize.x, fieldYPadding + gridSize.y }, 4.0f);
 	borderColor.DrawLine({ fieldX, fieldYPadding }, { fieldX + fieldSize.x, fieldYPadding }, 4.0f);
 	borderColor.DrawLine({ gridX, fieldYPadding + gridSize.y }, { gridX + gridSize.x, fieldYPadding + gridSize.y }, 4.0f);
+	
+	borderColor.DrawLine({ fieldX, fieldYPadding}, { fieldX, fieldYPadding + holdHeight }, 4.0f);
+	borderColor.DrawLine({ fieldX, fieldYPadding + holdHeight }, { fieldX + UI_PIECE_LENGTH * blockSize, fieldYPadding + holdHeight }, 4.0f);
+
+	borderColor.DrawLine({ fieldX + fieldSize.x, fieldYPadding }, { fieldX + fieldSize.x, fieldYPadding + nextHeight }, 4.0f);
+	borderColor.DrawLine({ gridX + gridSize.x, fieldYPadding + nextHeight }, { fieldX + fieldSize.x, fieldYPadding + nextHeight }, 4.0f);
 }
 
 #pragma endregion
