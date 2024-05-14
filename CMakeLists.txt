@@ -59,7 +59,7 @@ set(
     "source/Game/Piece.cpp" 
     "source/Game/SceneGame.cpp"
     "source/Game/SceneManager.cpp"
- "source/Assets.cpp")
+ "source/Assets.cpp" )
 
 set(
 	INCLUDE_DIRECTORIES 
