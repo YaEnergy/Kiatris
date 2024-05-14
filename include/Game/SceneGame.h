@@ -2,14 +2,27 @@
 
 #include "raylib-cpp.hpp"
 #include "Scene.h"
-#include "BlockCell.h"
+#include "Game/BlockCell.h"
 #include "Game/Piece.h"
 #include "Game/GameModifiers.h"
 #include <iostream>
 
+enum MenuState
+{
+	MENU_TITLE,
+	MENU_CONTROLS,
+	MENU_OPTIONS,
+	MENU_NONE
+};
+
 class SceneGame : public Scene
 {
 	private:
+		const int BUTTON_START_INDEX = 0;
+		const int BUTTON_OPTIONS_INDEX = 1;
+		const int BUTTON_CONTROLS_INDEX = 2;
+		const int BUTTON_QUIT_INDEX = 3;
+
 		raylib::Window& gameWindow;
 
 		GameModifiers gameModifiers;
@@ -32,6 +45,9 @@ class SceneGame : public Scene
 		std::vector<int> clearingLines;
 
 		bool gameOver = false;
+		
+		int menuButtonIndex = 0;
+		MenuState menuState = MENU_TITLE;
 
 		//statistics
 		int score = 0;
@@ -40,13 +56,25 @@ class SceneGame : public Scene
 		float timePlayingSeconds = 0;
 
 		//Gameplay
-		void StartGame(GameModifiers modifiers);
+		void SetGameModifiers(GameModifiers modifiers);
+		void StartGame();
 		void UpdateGameplay();
 		void UpdatePieceMovement();
 		void UpdatePieceGravity();
 		void LineClearCheck();
 		void UpdateGameOver();
 		void EndGame();
+
+		void DrawGame();
+
+		//Menus
+		void UpdateTitleMenu();
+		void UpdateOptionsMenu();
+		void UpdateControlsMenu();
+		
+		void DrawTitleMenu();
+		void DrawOptionsMenu();
+		void DrawControlsMenu();
 
 		//Pieces
 		Piece GetRandomPiece();
@@ -66,7 +94,7 @@ class SceneGame : public Scene
 	public:
 		SceneGame(raylib::Window& window, GameModifiers modifiers) : gameWindow(window)
 		{
-			StartGame(modifiers);
+			SetGameModifiers(modifiers);
 		}
 
 		void Init();

@@ -9,16 +9,32 @@ void SceneGame::Init()
 
 void SceneGame::Update()
 {
-	if (gameOver)
-		UpdateGameOver();
-	else
-		UpdateGameplay();
+	switch (menuState)
+	{
+		case MENU_TITLE:
+			UpdateTitleMenu();
+			break;
+		case MENU_OPTIONS:
+			UpdateOptionsMenu();
+			break;
+		case MENU_CONTROLS:
+			UpdateControlsMenu();
+			break;
+		default:
+			if (gameOver)
+				UpdateGameOver();
+			else
+				UpdateGameplay();
+
+			break;
+	}
 }
 
 #pragma region Gameplay
 
-void SceneGame::StartGame(GameModifiers modifiers)
+void SceneGame::SetGameModifiers(GameModifiers modifiers)
 {
+	//Delete old grid
 	if (grid != nullptr)
 	{
 		for (int y = 0; y < gameModifiers.GridSize.y; y++)
@@ -27,8 +43,27 @@ void SceneGame::StartGame(GameModifiers modifiers)
 		delete[] grid;
 	}
 
-	//main
 	gameModifiers = modifiers;
+
+	//Create grid
+	grid = new BlockCell * [modifiers.GridSize.y];
+	for (int y = 0; y < modifiers.GridSize.y; y++)
+	{
+		grid[y] = new BlockCell[modifiers.GridSize.x];
+
+		for (int x = 0; x < modifiers.GridSize.x; x++)
+		{
+			grid[y][x] = BlockCell(BLOCK_EMPTY, raylib::Color::Blank());
+		}
+	}
+
+	upAndComingPieces.clear();
+	upAndComingPieces.resize(modifiers.NumUpAndComingPieces);
+}
+
+void SceneGame::StartGame()
+{
+	//main
 	gameOver = false;
 	isClearingLines = false;
 	clearingLines.clear();
@@ -46,19 +81,15 @@ void SceneGame::StartGame(GameModifiers modifiers)
 
 	//pieces
 	holdingPiece = Piece(0); //no piece
-	upAndComingPieces = std::vector<Piece>(modifiers.NumUpAndComingPieces);
-	for (int i = 0; i < modifiers.NumUpAndComingPieces; i++)
+	for (int i = 0; i < gameModifiers.NumUpAndComingPieces; i++)
 		upAndComingPieces[i] = GetRandomPiece();
 
 	NextPiece();
 
-	//Create grid
-	grid = new BlockCell*[modifiers.GridSize.y];
-	for (int y = 0; y < modifiers.GridSize.y; y++)
+	//Clear grid
+	for (int y = 0; y < gameModifiers.GridSize.y; y++)
 	{
-		grid[y] = new BlockCell[modifiers.GridSize.x];
-
-		for (int x = 0; x < modifiers.GridSize.x; x++)
+		for (int x = 0; x < gameModifiers.GridSize.x; x++)
 		{
 			grid[y][x] = BlockCell(BLOCK_EMPTY, raylib::Color::Blank());
 		}
@@ -254,13 +285,104 @@ void SceneGame::LineClearCheck()
 void SceneGame::UpdateGameOver()
 {
 	if (IsKeyPressed(KEY_SPACE))
-		StartGame(gameModifiers);
+		StartGame();
 }
 
 void SceneGame::EndGame()
 {
 	GetSound("GameOver").Play();
 	gameOver = true;
+}
+
+void SceneGame::DrawGame()
+{
+	//TODO: prototype, will improve soon
+
+	const int UI_PIECE_LENGTH = 4;
+	const int BASE_FONT_SIZE = 12;
+
+	float windowTime = gameWindow.GetTime();
+
+	int screenWidth = gameWindow.GetWidth();
+	int screenHeight = gameWindow.GetHeight();
+
+	raylib::Texture2D& blockTexture = GetTexture("BlockPiece");
+	raylib::Rectangle blockTextureSource = { 0.0f, 0.0f, (float)blockTexture.width, (float)blockTexture.height };
+
+	//Background
+	blockTexture.Draw(raylib::Rectangle(Wrap(windowTime, 0.0f, 1.0f) * (float)blockTexture.width, Wrap(windowTime, 0.0f, 1.0f) * (float)blockTexture.height, (float)screenWidth / 1.5f, (float)screenHeight / 1.5f), { 0, 0, (float)screenWidth, (float)screenHeight }, { 0, 0 }, 0.0f, raylib::Color::DarkBlue());
+
+	//Field
+
+	float fieldXPadding = screenWidth / 10.0f;
+	float fieldYPadding = screenHeight / 10.0f;
+
+	float maxFieldWidth = screenWidth - fieldXPadding * 2;
+
+	float maxFieldHeight = screenHeight - fieldYPadding * 2;
+
+	//Grid size + Holding piece + Next pieces
+
+	float blockSize = std::min(maxFieldWidth / (gameModifiers.GridSize.x + UI_PIECE_LENGTH * 2), maxFieldHeight / gameModifiers.GridSize.y);
+
+	Vector2 fieldSize = { blockSize * (gameModifiers.GridSize.x + UI_PIECE_LENGTH * 2), blockSize * gameModifiers.GridSize.y };
+	float fieldX = ((float)screenWidth - fieldSize.x) / 2.0f;
+
+	Vector2 gridSize = { blockSize * gameModifiers.GridSize.x, blockSize * gameModifiers.GridSize.y };
+	float gridX = ((float)screenWidth - gridSize.x) / 2.0f;
+
+	//Grid background
+	raylib::Rectangle(gridX, fieldYPadding, gridSize.x, gridSize.y).Draw(raylib::Color::Black().Alpha(0.4f));
+	DrawGrid(gridX, fieldYPadding, blockSize, blockTexture);
+
+
+	//held piece
+	std::string holdText = "HELD";
+	int holdTextFontSize = (int)((float)BASE_FONT_SIZE / raylib::MeasureText(holdText, BASE_FONT_SIZE) * UI_PIECE_LENGTH * blockSize);
+
+	int holdTextWidth = raylib::MeasureText(holdText, holdTextFontSize);
+	raylib::DrawText(holdText, gridX - UI_PIECE_LENGTH * blockSize, fieldYPadding, holdTextFontSize, raylib::Color::White());
+
+	float holdPieceStartX = gridX - 4 * blockSize;
+	for (int i = 0; i < holdingPiece.numBlocks; i++)
+	{
+		raylib::Rectangle rect = { holdPieceStartX + blockSize * (holdingPiece.blockOffsets[i].x + 1), fieldYPadding + holdTextFontSize + blockSize * (holdingPiece.blockOffsets[i].y + 1), blockSize, blockSize };
+
+		blockTexture.Draw(blockTextureSource, rect, { 0.0f, 0.0f }, 0.0f, holdingPiece.blockColors[i]);
+	}
+
+	//up and coming pieces
+	std::string nextText = "NEXT";
+	int nextTextFontSize = (int)((float)BASE_FONT_SIZE / raylib::MeasureText(nextText, BASE_FONT_SIZE) * UI_PIECE_LENGTH * blockSize);
+	int nextTextWidth = raylib::MeasureText(nextText, nextTextFontSize);
+	raylib::DrawText(nextText, gridX + gridSize.x, fieldYPadding, nextTextFontSize, raylib::Color::White());
+
+	int nextPieceStartX = gridX + gridSize.x;
+	for (int pieceIndex = 0; pieceIndex < gameModifiers.NumUpAndComingPieces; pieceIndex++)
+	{
+		int pieceStartY = fieldYPadding + nextTextFontSize + (UI_PIECE_LENGTH * blockSize) * (pieceIndex);
+
+		for (int i = 0; i < upAndComingPieces[pieceIndex].numBlocks; i++)
+		{
+			raylib::Rectangle rect = { nextPieceStartX + blockSize * (upAndComingPieces[pieceIndex].blockOffsets[i].x + 1), pieceStartY + blockSize * (upAndComingPieces[pieceIndex].blockOffsets[i].y + 1), blockSize, blockSize };
+
+			blockTexture.Draw(blockTextureSource, rect, { 0.0f, 0.0f }, 0.0f, upAndComingPieces[pieceIndex].blockColors[i]);
+		}
+	}
+
+	//Draw stats, temp
+	raylib::DrawText("Score: " + std::to_string(score), 10, 24, 36, raylib::Color::White());
+	raylib::DrawText("Level: " + std::to_string(level), 10, 36 + 24, 36, raylib::Color::White());
+	raylib::DrawText("Cleared: " + std::to_string(totalLinesCleared), 10, 36 * 2 + 24, 36, raylib::Color::White());
+	raylib::DrawText("Time: " + std::to_string(timePlayingSeconds), 10, 36 * 3 + 24, 36, raylib::Color::White());
+	raylib::DrawText("Switched piece: " + std::to_string(hasSwitchedPiece), 10, 36 * 4 + 24, 36, (hasSwitchedPiece ? raylib::Color::Red() : raylib::Color::White()));
+
+	//Borders
+	raylib::Color borderColor = raylib::Color::SkyBlue();
+	borderColor.DrawLine({ gridX, fieldYPadding }, { gridX, fieldYPadding + gridSize.y }, 4.0f);
+	borderColor.DrawLine({ gridX + gridSize.x, fieldYPadding }, { gridX + gridSize.x, fieldYPadding + gridSize.y }, 4.0f);
+	borderColor.DrawLine({ fieldX, fieldYPadding }, { fieldX + fieldSize.x, fieldYPadding }, 4.0f);
+	borderColor.DrawLine({ gridX, fieldYPadding + gridSize.y }, { gridX + gridSize.x, fieldYPadding + gridSize.y }, 4.0f);
 }
 
 #pragma endregion
@@ -448,7 +570,7 @@ void SceneGame::DrawGrid(float posX, float posY, float blockSize, raylib::Textur
 			blockTexture.Draw(blockTextureSource, rect, { 0.0f, 0.0f }, 0.0f, currentPiece.blockColors[i]);
 		}
 
-		if (gameModifiers.ShowPiecePreview)
+		if (gameModifiers.ShowPiecePreview && currentPiece.numBlocks != 0)
 		{
 			//Draw current piece preview
 			Vector2Int previewPosition = currentPiecePosition;
@@ -474,96 +596,95 @@ void SceneGame::DrawGrid(float posX, float posY, float blockSize, raylib::Textur
 
 #pragma endregion
 
-
-void SceneGame::Draw()
+#pragma region Menus
+void SceneGame::UpdateTitleMenu()
 {
-	//TODO: prototype, will improve soon
+	if (IsKeyPressed(KEY_DOWN))
+		menuButtonIndex = std::min(menuButtonIndex + 1, 3);
+	else if (IsKeyPressed(KEY_UP))
+		menuButtonIndex = std::max(menuButtonIndex - 1, 0);
 
-	const int UI_PIECE_LENGTH = 4;
-	const int BASE_FONT_SIZE = 12;
+	//Press buttons
+	if (menuButtonIndex == BUTTON_START_INDEX && IsKeyPressed(KEY_SPACE))
+	{
+		menuState = MENU_NONE;
+		StartGame();
+	}
+	else if (menuButtonIndex == BUTTON_OPTIONS_INDEX && IsKeyPressed(KEY_SPACE))
+	{
+		menuState = MENU_OPTIONS;
+	}
+	else if (menuButtonIndex == BUTTON_CONTROLS_INDEX && IsKeyPressed(KEY_SPACE))
+	{
+		menuState = MENU_CONTROLS;
+	}
+	else if (menuButtonIndex == BUTTON_QUIT_INDEX && IsKeyPressed(KEY_SPACE))
+	{
+		//TODO: currently actually crashes the game, fix
+		gameWindow.Close();
+	}
+}
 
-	float windowTime = gameWindow.GetTime();
+void SceneGame::UpdateOptionsMenu()
+{
 
+}
+
+void SceneGame::UpdateControlsMenu()
+{
+
+}
+
+void SceneGame::DrawTitleMenu() 
+{
 	int screenWidth = gameWindow.GetWidth();
 	int screenHeight = gameWindow.GetHeight();
 
-	raylib::Texture2D& blockTexture = GetTexture("BlockPiece");
-	raylib::Rectangle blockTextureSource = { 0.0f, 0.0f, (float)blockTexture.width, (float)blockTexture.height };
-
 	//Background
-	blockTexture.Draw(raylib::Rectangle( Wrap(windowTime, 0.0f, 1.0f) * (float)blockTexture.width, Wrap(windowTime, 0.0f, 1.0f) * (float)blockTexture.height, (float)screenWidth / 1.5f, (float)screenHeight / 1.5f ), { 0, 0, (float)screenWidth, (float)screenHeight }, { 0, 0 }, 0.0f, raylib::Color::DarkBlue());
+	raylib::Color backgroundColor = raylib::Color(30, 30, 30, 120);
+	backgroundColor.DrawRectangle(0, 0, screenWidth, screenHeight);
 
-	//Field
+	//Icon
+	raylib::Texture2D& iconTexture = GetTexture("Icon");
+	raylib::Rectangle iconSourceRect = raylib::Rectangle{ 0, 0, (float)iconTexture.width, (float)iconTexture.height };
+	iconTexture.Draw(iconSourceRect, raylib::Rectangle{ screenWidth / 2.0f, screenHeight / 2.0f, (float)iconTexture.width, (float)iconTexture.height }, { (float)iconTexture.width / 2.0f, (float)iconTexture.height / 2.0f }, 0.0f, raylib::Color::White());
 
-	float fieldXPadding = screenWidth / 10.0f;
-	float fieldYPadding = screenHeight / 10.0f;
+	//Buttons
 
-	float maxFieldWidth = screenWidth - fieldXPadding * 2;
+	//For debug purposes
+	DrawText(TextFormat("Button index: %i", menuButtonIndex), 12, 12 + 24, 24, raylib::Color::White());
+}
 
-	float maxFieldHeight = screenHeight - fieldYPadding * 2;
-	
-	//Grid size + Holding piece + Next pieces
+void SceneGame::DrawOptionsMenu()
+{
 
-	float blockSize = std::min(maxFieldWidth / (gameModifiers.GridSize.x + UI_PIECE_LENGTH * 2), maxFieldHeight / gameModifiers.GridSize.y);
+}
 
-	Vector2 fieldSize = { blockSize * (gameModifiers.GridSize.x + UI_PIECE_LENGTH * 2), blockSize * gameModifiers.GridSize.y };
-	float fieldX = ((float)screenWidth - fieldSize.x) / 2.0f;
+void SceneGame::DrawControlsMenu()
+{
 
-	Vector2 gridSize = { blockSize * gameModifiers.GridSize.x, blockSize * gameModifiers.GridSize.y };
-	float gridX = ((float)screenWidth - gridSize.x) / 2.0f;
-
-	//Grid background
-	raylib::Rectangle(gridX, fieldYPadding, gridSize.x, gridSize.y).Draw(raylib::Color::Black().Alpha(0.4f));
-	DrawGrid(gridX, fieldYPadding, blockSize, blockTexture);
+}
+#pragma endregion
 
 
-	//held piece
-	std::string holdText = "HELD";
-	int holdTextFontSize = (int)((float)BASE_FONT_SIZE / raylib::MeasureText(holdText, BASE_FONT_SIZE) * UI_PIECE_LENGTH * blockSize);
+void SceneGame::Draw()
+{
+	DrawGame();
 
-	int holdTextWidth = raylib::MeasureText(holdText, holdTextFontSize);
-	raylib::DrawText(holdText, gridX - UI_PIECE_LENGTH * blockSize, fieldYPadding, holdTextFontSize, raylib::Color::White());
-
-	float holdPieceStartX = gridX - 4 * blockSize;
-	for (int i = 0; i < holdingPiece.numBlocks; i++)
+	switch (menuState)
 	{
-		raylib::Rectangle rect = { holdPieceStartX + blockSize * (holdingPiece.blockOffsets[i].x + 1), fieldYPadding + holdTextFontSize + blockSize * (holdingPiece.blockOffsets[i].y + 1), blockSize, blockSize };
-
-		blockTexture.Draw(blockTextureSource, rect, { 0.0f, 0.0f }, 0.0f, holdingPiece.blockColors[i]);
+		case MENU_TITLE:
+			DrawTitleMenu();
+			break;
+		case MENU_OPTIONS:
+			DrawOptionsMenu();
+			break;
+		case MENU_CONTROLS:
+			DrawControlsMenu();
+			break;
+		default:
+			break;
 	}
-
-	//up and coming pieces
-	std::string nextText = "NEXT";
-	int nextTextFontSize = (int)((float)BASE_FONT_SIZE / raylib::MeasureText(nextText, BASE_FONT_SIZE) * UI_PIECE_LENGTH * blockSize);
-	int nextTextWidth = raylib::MeasureText(nextText, nextTextFontSize);
-	raylib::DrawText(nextText, gridX + gridSize.x, fieldYPadding, nextTextFontSize, raylib::Color::White());
-	
-	int nextPieceStartX = gridX + gridSize.x;
-	for (int pieceIndex = 0; pieceIndex < gameModifiers.NumUpAndComingPieces; pieceIndex++)
-	{
-		int pieceStartY = fieldYPadding + nextTextFontSize + (UI_PIECE_LENGTH * blockSize) * (pieceIndex);
-
-		for (int i = 0; i < upAndComingPieces[pieceIndex].numBlocks; i++)
-		{
-			raylib::Rectangle rect = { nextPieceStartX + blockSize * (upAndComingPieces[pieceIndex].blockOffsets[i].x + 1), pieceStartY + blockSize * (upAndComingPieces[pieceIndex].blockOffsets[i].y + 1), blockSize, blockSize };
-
-			blockTexture.Draw(blockTextureSource, rect, { 0.0f, 0.0f }, 0.0f, upAndComingPieces[pieceIndex].blockColors[i]);
-		}
-	}
-
-	//Draw stats, temp
-	raylib::DrawText("Score: " + std::to_string(score), 10, 24, 36, raylib::Color::White());
-	raylib::DrawText("Level: " + std::to_string(level), 10, 36 + 24, 36, raylib::Color::White());
-	raylib::DrawText("Cleared: " + std::to_string(totalLinesCleared), 10, 36 * 2 + 24, 36, raylib::Color::White());
-	raylib::DrawText("Time: " + std::to_string(timePlayingSeconds), 10, 36 * 3 + 24, 36, raylib::Color::White());
-	raylib::DrawText("Switched piece: " + std::to_string(hasSwitchedPiece), 10, 36 * 4 + 24, 36, (hasSwitchedPiece ? raylib::Color::Red() : raylib::Color::White()));
-	
-	//Borders
-	raylib::Color borderColor = raylib::Color::SkyBlue();
-	borderColor.DrawLine({ gridX, fieldYPadding }, { gridX, fieldYPadding + gridSize.y }, 4.0f);
-	borderColor.DrawLine({ gridX + gridSize.x, fieldYPadding }, { gridX + gridSize.x, fieldYPadding + gridSize.y }, 4.0f);
-	borderColor.DrawLine({ fieldX, fieldYPadding }, { fieldX + fieldSize.x, fieldYPadding }, 4.0f);
-	borderColor.DrawLine({ gridX, fieldYPadding + gridSize.y }, { gridX + gridSize.x, fieldYPadding + gridSize.y }, 4.0f);
 }
 
 void SceneGame::Destroy()

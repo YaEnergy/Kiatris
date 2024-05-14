@@ -6,6 +6,7 @@ std::unordered_map<std::string, raylib::Sound> sounds;
 void LoadAssets()
 {
 	//textures
+	textures.emplace("Icon", raylib::Texture2D("assets/Kiatris_icon.png"));
 	textures.emplace("BlockPiece", raylib::Texture2D("assets/textures/piece_block.png"));
 	textures["BlockPiece"].SetWrap(TEXTURE_WRAP_REPEAT);
 

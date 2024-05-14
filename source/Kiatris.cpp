@@ -28,12 +28,12 @@ class Game
 			window.EndDrawing();
 		}
 	public:
-		Game() : window(DESIGN_WIDTH, DESIGN_HEIGHT, "Kiatris"), audioDevice()
+		Game() : window(DESIGN_WIDTH, DESIGN_HEIGHT, "Kiatris", FLAG_VSYNC_HINT), audioDevice()
 		{
 			raylib::Image icon = raylib::Image("assets/Kiatris_icon.png");
 			window.SetIcon(icon);
 
-			SceneGame gameScene(window, { GAMEMODE_ENDLESS, 3, {10, 20}, true});
+			SceneGame gameScene(window, { 3, {10, 20}, true});
 			sceneManager.SetScene(&gameScene);
 			
 			window.SetState(FLAG_WINDOW_RESIZABLE);
