@@ -296,8 +296,6 @@ void SceneGame::EndGame()
 
 void SceneGame::DrawGame()
 {
-	//TODO: hold and next x offsets!!!
-
 	const int UI_PIECE_LENGTH = 4;
 	const int BASE_FONT_SIZE = 12;
 
@@ -341,13 +339,13 @@ void SceneGame::DrawGame()
 
 	//held piece
 	std::string holdText = "HELD";
-	int holdTextFontSize = (int)((float)BASE_FONT_SIZE / raylib::MeasureText(holdText, BASE_FONT_SIZE) * UI_PIECE_LENGTH * blockSize);
+	int holdTextFontSize = (int)((float)BASE_FONT_SIZE / raylib::MeasureText(holdText, BASE_FONT_SIZE) * (UI_PIECE_LENGTH - 1.0f) * blockSize);
 	int holdTextWidth = raylib::MeasureText(holdText, holdTextFontSize);
 
 	float holdHeight = blockSize * UI_PIECE_LENGTH + holdTextFontSize;
 	gridBackgroundColor.DrawRectangle({ fieldX, fieldYPadding, blockSize * UI_PIECE_LENGTH, holdHeight });
 
-	raylib::DrawText(holdText, gridX - UI_PIECE_LENGTH * blockSize, fieldYPadding, holdTextFontSize, raylib::Color::White());
+	raylib::DrawText(holdText, gridX - (UI_PIECE_LENGTH - 0.5f) * blockSize, fieldYPadding, holdTextFontSize, raylib::Color::White());
 
 	float holdPieceStartX = gridX - 4 * blockSize;
 	for (int i = 0; i < holdingPiece.numBlocks; i++)
@@ -359,13 +357,13 @@ void SceneGame::DrawGame()
 
 	//up and coming pieces
 	std::string nextText = "NEXT";
-	int nextTextFontSize = (int)((float)BASE_FONT_SIZE / raylib::MeasureText(nextText, BASE_FONT_SIZE) * UI_PIECE_LENGTH * blockSize);
+	int nextTextFontSize = (int)((float)BASE_FONT_SIZE / raylib::MeasureText(nextText, BASE_FONT_SIZE) * (UI_PIECE_LENGTH - 1.0f) * blockSize);
 	int nextTextWidth = raylib::MeasureText(nextText, nextTextFontSize);
 
 	float nextHeight = blockSize * (UI_PIECE_LENGTH + 1) * gameModifiers.NumUpAndComingPieces - blockSize + nextTextFontSize;
 	gridBackgroundColor.DrawRectangle({ gridX + gridSize.x, fieldYPadding, blockSize * UI_PIECE_LENGTH, nextHeight });
 
-	raylib::DrawText(nextText, gridX + gridSize.x, fieldYPadding, nextTextFontSize, raylib::Color::White());
+	raylib::DrawText(nextText, gridX + gridSize.x + 0.5f * blockSize, fieldYPadding, nextTextFontSize, raylib::Color::White());
 
 	int nextPieceStartX = gridX + gridSize.x;
 	for (int pieceIndex = 0; pieceIndex < gameModifiers.NumUpAndComingPieces; pieceIndex++)
