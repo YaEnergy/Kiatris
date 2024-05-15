@@ -37,6 +37,10 @@ class Game
 			sceneManager.SetScene(&gameScene);
 			
 			window.SetState(FLAG_WINDOW_RESIZABLE);
+			
+			int monitor = GetCurrentMonitor();
+			window.SetMonitor(monitor);
+			window.SetTargetFPS(GetMonitorRefreshRate(monitor));
 
 			LoadAssets();
 
@@ -44,6 +48,12 @@ class Game
 
 			while (!window.ShouldClose())
 			{
+				if (GetCurrentMonitor() != monitor)
+				{
+					monitor = GetCurrentMonitor();
+					window.SetTargetFPS(GetMonitorRefreshRate(monitor));
+				}
+
 				UpdateDrawFrame();
 			}
 			
