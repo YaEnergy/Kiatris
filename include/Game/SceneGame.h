@@ -35,6 +35,7 @@ class SceneGame : public Scene
 		Piece holdingPiece;
 		bool hasSwitchedPiece = false;
 
+		std::vector<Piece> bagPieces;
 		std::vector<Piece> upAndComingPieces;
 
 		BlockCell** grid = nullptr;
@@ -77,8 +78,12 @@ class SceneGame : public Scene
 		void DrawControlsMenu();
 
 		//Pieces
+
 		Piece GetRandomPiece();
 		bool CanPieceExistAt(Piece piece, Vector2Int position);
+
+		void RefillBag();
+		Piece GetRandomPieceFromBag();
 
 		void NextPiece();
 		void PlacePiece();

@@ -48,10 +48,10 @@ void UnloadAssets()
 
 raylib::Texture2D& GetTexture(std::string name)
 {
-	return textures[name];
+	return textures.at(name);
 }
 
 raylib::Sound& GetSound(std::string name)
 {
-	return sounds[name];
+	return sounds.at(name);
 }

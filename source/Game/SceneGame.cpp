@@ -2,6 +2,8 @@
 #include "Game/SceneGame.h"
 #include "Assets.h"
 
+#include <format>
+
 void SceneGame::Init()
 {
 	
@@ -82,7 +84,7 @@ void SceneGame::StartGame()
 	//pieces
 	holdingPiece = Piece(0); //no piece
 	for (int i = 0; i < gameModifiers.NumUpAndComingPieces; i++)
-		upAndComingPieces[i] = GetRandomPiece();
+		upAndComingPieces[i] = GetRandomPieceFromBag();
 
 	NextPiece();
 
@@ -125,7 +127,7 @@ void SceneGame::UpdateGameplay()
 			}
 
 			std::cout << "Cleared " + std::to_string(clearingLines.size()) + " line(s) " << std::endl;
-			score += 1000 * scoreMultiplier;
+			score += 100 * scoreMultiplier;
 			isClearingLines = false;
 
 			//Level up every total 10 lines cleared
@@ -156,7 +158,7 @@ void SceneGame::UpdateGameplay()
 		if (!CanPieceExistAt(currentPiece, currentPiecePosition))
 			EndGame();
 	}
-	else if (IsKeyPressed(KEY_C) && !hasSwitchedPiece)
+	else if ((IsKeyPressed(KEY_C) || IsKeyPressed(KEY_LEFT_SHIFT) || IsKeyPressed(KEY_RIGHT_SHIFT)) && !hasSwitchedPiece)
 		HoldPiece();
 	else
 		UpdatePieceGravity();
@@ -167,10 +169,10 @@ void SceneGame::UpdatePieceMovement()
 	Piece piece = currentPiece;
 
 	//rotation
-	if (IsKeyPressed(KEY_E))
-		piece = piece.GetLeftRotation();
-	else if (IsKeyPressed(KEY_R))
-		piece = piece.GetRightRotation();
+	if (IsKeyPressed(KEY_LEFT_CONTROL) || IsKeyPressed(KEY_RIGHT_CONTROL) || IsKeyPressed(KEY_Z) || IsKeyPressed(KEY_E))
+		piece = piece.GetLeftRotation(); //Counter-clockwise
+	else if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_X) || IsKeyPressed(KEY_R))
+		piece = piece.GetRightRotation(); //Clockwise
 	else if (IsKeyPressed(KEY_T))
 		piece = piece.GetHalfCircleRotation();
 
@@ -378,8 +380,16 @@ void SceneGame::DrawGame()
 		}
 	}
 
+	//Score
+	std::string scoreText = "Score";
+	int scoreTextFontSize = (int)((float)BASE_FONT_SIZE / raylib::MeasureText(scoreText, BASE_FONT_SIZE) * (UI_PIECE_LENGTH - 1.0f) * blockSize);
+	raylib::DrawText(scoreText, fieldX + 0.5f * blockSize, fieldYPadding + holdTextFontSize + blockSize * UI_PIECE_LENGTH, scoreTextFontSize, raylib::Color::White());
+
+	std::string scoreValText = std::format("{:0>5}", score);
+	int scoreValTextFontSize = (int)((float)BASE_FONT_SIZE / raylib::MeasureText(scoreValText, BASE_FONT_SIZE) * (UI_PIECE_LENGTH - 1.0f) * blockSize);
+	raylib::DrawText(scoreValText, fieldX + 0.5f * blockSize, fieldYPadding + holdTextFontSize + blockSize * UI_PIECE_LENGTH + scoreTextFontSize, scoreValTextFontSize, raylib::Color::White());
+
 	//Draw stats, temp
-	raylib::DrawText("Score: " + std::to_string(score), 10, 24, 36, raylib::Color::White());
 	raylib::DrawText("Level: " + std::to_string(level), 10, 36 + 24, 36, raylib::Color::White());
 	raylib::DrawText("Cleared: " + std::to_string(totalLinesCleared), 10, 36 * 2 + 24, 36, raylib::Color::White());
 	raylib::DrawText("Time: " + std::to_string(timePlayingSeconds), 10, 36 * 3 + 24, 36, raylib::Color::White());
@@ -420,6 +430,32 @@ bool SceneGame::CanPieceExistAt(Piece piece, Vector2Int position)
 	return true;
 }
 
+void SceneGame::RefillBag()
+{
+	bagPieces.clear();
+
+	for (int i = 0; i < 7; i++)
+		bagPieces.emplace_back(Piece::GetMainPiece((MainPieceType)i));
+
+	std::cout << "Refilled bag" << std::endl;
+}
+
+Piece SceneGame::GetRandomPieceFromBag()
+{
+	//refill bag if empty
+	if (bagPieces.size() == 0)
+		RefillBag();
+
+	int bagIndex = GetRandomValue(0, bagPieces.size() - 1);
+
+	Piece piece = bagPieces[bagIndex];
+
+	//remove piece from bag
+	bagPieces.erase(std::next(bagPieces.begin(), bagIndex));
+
+	return piece;
+}
+
 void SceneGame::NextPiece()
 {
 	//get next piece in line
@@ -429,8 +465,8 @@ void SceneGame::NextPiece()
 	for (int i = 0; i < gameModifiers.NumUpAndComingPieces - 1; i++)
 		upAndComingPieces[i] = upAndComingPieces[i + 1];
 
-	//fill last spot with new piece
-	upAndComingPieces[gameModifiers.NumUpAndComingPieces - 1] = GetRandomPiece();
+	//fill last spot with random piece from bag
+	upAndComingPieces[gameModifiers.NumUpAndComingPieces - 1] = GetRandomPieceFromBag();
 
 	currentPiecePosition = { gameModifiers.GridSize.x / 2 , 0 };
 
