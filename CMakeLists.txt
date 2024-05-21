@@ -95,6 +95,10 @@ else()
     target_link_options(${PROJECT_NAME} PRIVATE ${SUBSYSTEM_LINKER_OPTIONS})
 endif()
 
+ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_compile_definitions(DEBUG)
+ endif()
+
 target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRECTORIES})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 11)

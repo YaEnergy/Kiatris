@@ -380,21 +380,45 @@ void SceneGame::DrawGame()
 		}
 	}
 
+	//Statistics
+	int statPanelHeightPadding = 10;
+	int statTextFontSize = (int)((float)BASE_FONT_SIZE / raylib::MeasureText("AAAAA", BASE_FONT_SIZE) * (UI_PIECE_LENGTH - 1.0f) * blockSize);
+
+	gridBackgroundColor.DrawRectangle({ fieldX, fieldYPadding + holdHeight, blockSize * UI_PIECE_LENGTH, statTextFontSize * 8.0f + statPanelHeightPadding * 2.0f });
 	//Score
-	std::string scoreText = "Score";
-	int scoreTextFontSize = (int)((float)BASE_FONT_SIZE / raylib::MeasureText(scoreText, BASE_FONT_SIZE) * (UI_PIECE_LENGTH - 1.0f) * blockSize);
-	raylib::DrawText(scoreText, fieldX + 0.5f * blockSize, fieldYPadding + holdTextFontSize + blockSize * UI_PIECE_LENGTH, scoreTextFontSize, raylib::Color::White());
+	std::string scoreText = "SCORE";
+	raylib::DrawText(scoreText, fieldX + 0.5f * blockSize, fieldYPadding + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statPanelHeightPadding, statTextFontSize, raylib::Color::White());
 
 	std::string scoreValText = std::format("{:0>5}", score);
-	int scoreValTextFontSize = (int)((float)BASE_FONT_SIZE / raylib::MeasureText(scoreValText, BASE_FONT_SIZE) * (UI_PIECE_LENGTH - 1.0f) * blockSize);
-	raylib::DrawText(scoreValText, fieldX + 0.5f * blockSize, fieldYPadding + holdTextFontSize + blockSize * UI_PIECE_LENGTH + scoreTextFontSize, scoreValTextFontSize, raylib::Color::White());
+	raylib::DrawText(scoreValText, fieldX + 0.5f * blockSize, fieldYPadding + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize + statPanelHeightPadding, statTextFontSize, raylib::Color::White());
 
+	//Level
+	std::string levelText = "LEVEL";
+	raylib::DrawText(levelText, fieldX + 0.5f * blockSize, fieldYPadding + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize * 2 + statPanelHeightPadding, statTextFontSize, raylib::Color::White());
+
+	std::string levelValText = std::format("{:0>3}", level);
+	raylib::DrawText(levelValText, fieldX + 0.5f * blockSize, fieldYPadding + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize * 3 + statPanelHeightPadding, statTextFontSize, raylib::Color::White());
+	
+	//Cleared lines
+	std::string clearedText = "LINES";
+	raylib::DrawText(clearedText, fieldX + 0.5f * blockSize, fieldYPadding + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize * 4 + statPanelHeightPadding, statTextFontSize, raylib::Color::White());
+
+	std::string clearedValText = std::format("{:0>3}", totalLinesCleared);
+	raylib::DrawText(clearedValText, fieldX + 0.5f * blockSize, fieldYPadding + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize * 5 + statPanelHeightPadding, statTextFontSize, raylib::Color::White());
+
+	//Time
+	std::string timeText = "TIME";
+	raylib::DrawText(timeText, fieldX + 0.5f * blockSize, fieldYPadding + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize * 6 + statPanelHeightPadding, statTextFontSize, raylib::Color::White());
+
+	std::string timeValText = std::format("{:0>3}", std::truncf(timePlayingSeconds));
+	raylib::DrawText(timeValText, fieldX + 0.5f * blockSize, fieldYPadding + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize * 7 + statPanelHeightPadding, statTextFontSize, raylib::Color::White());
+
+#ifdef DEBUG
 	//Draw stats, temp
-	raylib::DrawText("Level: " + std::to_string(level), 10, 36 + 24, 36, raylib::Color::White());
-	raylib::DrawText("Cleared: " + std::to_string(totalLinesCleared), 10, 36 * 2 + 24, 36, raylib::Color::White());
-	raylib::DrawText("Time: " + std::to_string(timePlayingSeconds), 10, 36 * 3 + 24, 36, raylib::Color::White());
-	raylib::DrawText("Switched piece: " + std::to_string(hasSwitchedPiece), 10, 36 * 4 + 24, 36, (hasSwitchedPiece ? raylib::Color::Red() : raylib::Color::White()));
+	raylib::DrawText("Switched piece: " + std::to_string(hasSwitchedPiece), 10, 24, 36, (hasSwitchedPiece ? raylib::Color::Red() : raylib::Color::White()));
+#endif
 
+	//TODO: replace some of these with rectangle outline draws
 	//Borders
 	raylib::Color borderColor = raylib::Color::SkyBlue();
 	borderColor.DrawLine({ gridX, fieldYPadding }, { gridX, fieldYPadding + gridSize.y }, 4.0f);
@@ -402,8 +426,9 @@ void SceneGame::DrawGame()
 	borderColor.DrawLine({ fieldX, fieldYPadding }, { fieldX + fieldSize.x, fieldYPadding }, 4.0f);
 	borderColor.DrawLine({ gridX, fieldYPadding + gridSize.y }, { gridX + gridSize.x, fieldYPadding + gridSize.y }, 4.0f);
 	
-	borderColor.DrawLine({ fieldX, fieldYPadding}, { fieldX, fieldYPadding + holdHeight }, 4.0f);
+	borderColor.DrawLine({ fieldX, fieldYPadding}, { fieldX, fieldYPadding + holdHeight + statTextFontSize * 8 + statPanelHeightPadding * 2 }, 4.0f);
 	borderColor.DrawLine({ fieldX, fieldYPadding + holdHeight }, { fieldX + UI_PIECE_LENGTH * blockSize, fieldYPadding + holdHeight }, 4.0f);
+	borderColor.DrawLine({ fieldX, fieldYPadding + holdHeight + statTextFontSize * 8 + statPanelHeightPadding * 2 }, { fieldX + UI_PIECE_LENGTH * blockSize, fieldYPadding + holdHeight + statTextFontSize * 8 + statPanelHeightPadding * 2 }, 4.0f);
 
 	borderColor.DrawLine({ fieldX + fieldSize.x, fieldYPadding }, { fieldX + fieldSize.x, fieldYPadding + nextHeight }, 4.0f);
 	borderColor.DrawLine({ gridX + gridSize.x, fieldYPadding + nextHeight }, { fieldX + fieldSize.x, fieldYPadding + nextHeight }, 4.0f);
