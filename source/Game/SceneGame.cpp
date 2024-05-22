@@ -23,9 +23,21 @@ void SceneGame::Update()
 			UpdateControlsMenu();
 			break;
 		default:
+
 			if (gameOver)
+			{
 				UpdateGameOver();
-			else
+				return;
+			}
+
+			//Pausing and unpausing
+			if (IsKeyPressed(KEY_ESCAPE) || IsKeyPressed(KEY_F1))
+			{
+				gamePaused = !gamePaused;
+				std::cout << "Paused state: " + std::to_string(gamePaused)  << std::endl;
+			}
+
+			if (!gamePaused)
 				UpdateGameplay();
 
 			break;
@@ -67,6 +79,7 @@ void SceneGame::StartGame()
 {
 	//main
 	gameOver = false;
+	gamePaused = false;
 	isClearingLines = false;
 	clearingLines.clear();
 
@@ -294,6 +307,7 @@ void SceneGame::EndGame()
 {
 	GetSound("GameOver").Play();
 	gameOver = true;
+	gamePaused = false;
 }
 
 void SceneGame::DrawGame()
@@ -337,6 +351,16 @@ void SceneGame::DrawGame()
 	raylib::Rectangle(gridX, fieldYPadding, gridSize.x, gridSize.y).Draw(gridBackgroundColor);
 
 	DrawGrid(gridX, fieldYPadding, blockSize, blockTexture);
+
+	//Draw pause overlay if paused
+	if (gamePaused)
+	{
+		raylib::Rectangle(gridX, fieldYPadding, gridSize.x, gridSize.y).Draw(gridBackgroundColor);
+
+		std::string pausedText = "PAUSED";
+		int pausedTextFontSize = (int)((float)BASE_FONT_SIZE / raylib::MeasureText(pausedText, BASE_FONT_SIZE) * gridSize.x / 2.0f);
+		raylib::DrawText(pausedText, (int)(gridX + gridSize.x / 2.0f - gridSize.x / 4.0f), (int)(fieldYPadding + gridSize.y / 2.0f - pausedTextFontSize / 2.0f), pausedTextFontSize, raylib::Color::White());
+	}
 
 
 	//held piece

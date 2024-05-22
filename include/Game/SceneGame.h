@@ -46,6 +46,7 @@ class SceneGame : public Scene
 		std::vector<int> clearingLines;
 
 		bool gameOver = false;
+		bool gamePaused = false;
 		
 		int menuButtonIndex = 0;
 		MenuState menuState = MENU_TITLE;
@@ -76,6 +77,7 @@ class SceneGame : public Scene
 		void DrawTitleMenu();
 		void DrawOptionsMenu();
 		void DrawControlsMenu();
+		void DrawPauseMenu();
 
 		//Pieces
 

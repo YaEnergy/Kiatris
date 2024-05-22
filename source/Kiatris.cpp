@@ -42,6 +42,8 @@ class Game
 			window.SetMonitor(monitor);
 			window.SetTargetFPS(GetMonitorRefreshRate(monitor));
 
+			SetExitKey(KEY_NULL);
+
 			LoadAssets();
 
 			//TODO: loading assets, flags, init, Emscripten modifications, audio device
