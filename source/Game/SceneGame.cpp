@@ -30,15 +30,26 @@ void SceneGame::Update()
 				return;
 			}
 
+			raylib::Music& mainTheme = GetMusic("MainTheme");
+
 			//Pausing and unpausing
 			if (IsKeyPressed(KEY_ESCAPE) || IsKeyPressed(KEY_F1))
 			{
 				gamePaused = !gamePaused;
+
+				mainTheme.SetVolume(gamePaused ? 0.1f : 0.2f);
+				GetSound("PlacePiece").Play();
+
 				std::cout << "Paused state: " + std::to_string(gamePaused)  << std::endl;
 			}
 
 			if (!gamePaused)
 				UpdateGameplay();
+
+			if (!mainTheme.IsPlaying())
+				mainTheme.Play();
+
+			mainTheme.Update();
 
 			break;
 	}

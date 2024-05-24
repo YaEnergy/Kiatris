@@ -30,7 +30,7 @@ class Game
 	public:
 		Game() : window(DESIGN_WIDTH, DESIGN_HEIGHT, "Kiatris", FLAG_VSYNC_HINT), audioDevice()
 		{
-			raylib::Image icon = raylib::Image("assets/Kiatris_icon.png");
+			raylib::Image icon = raylib::Image("assets/textures/kiatrisicon.png");
 			window.SetIcon(icon);
 
 			SceneGame gameScene(window, { 3, {10, 20}, true});
@@ -44,6 +44,17 @@ class Game
 
 			SetExitKey(KEY_NULL);
 
+			//Loading background
+			window.BeginDrawing();
+			window.ClearBackground(raylib::Color::Black());
+
+			raylib::DrawText("Loading...", 12, 12, 36, raylib::Color::White());
+
+			raylib::DrawText("Please wait...", 12, 48, 36, raylib::Color::White());
+
+			window.EndDrawing();
+
+			//Load
 			LoadAssets();
 
 			//TODO: loading assets, flags, init, Emscripten modifications, audio device

@@ -2,19 +2,27 @@
 
 std::unordered_map<std::string, raylib::Texture2D> textures;
 std::unordered_map<std::string, raylib::Sound> sounds;
+std::unordered_map<std::string, raylib::Music> musicFiles;
 
 void LoadAssets()
 {
 	//textures
 	textures.emplace("Icon", raylib::Texture2D("assets/Kiatris_icon.png"));
 	textures.emplace("BlockPiece", raylib::Texture2D("assets/textures/piece_block.png"));
-	textures["BlockPiece"].SetWrap(TEXTURE_WRAP_REPEAT);
+	GetTexture("BlockPiece").SetWrap(TEXTURE_WRAP_REPEAT);
 
 	//sounds
 	sounds.emplace("PlacePiece", raylib::Sound("assets/sfx/piece_place.wav"));
 	sounds.emplace("LevelUp", raylib::Sound("assets/sfx/level_up.wav"));
 	sounds.emplace("GameOver", raylib::Sound("assets/sfx/lose.wav"));
 	sounds.emplace("LineClear", raylib::Sound("assets/sfx/line_clear.wav"));
+
+	//music
+	musicFiles.emplace("MainTheme", raylib::Music("assets/music/Space 1990.mp3"));
+
+	raylib::Music& mainTheme = GetMusic("MainTheme");
+	mainTheme.SetLooping(true);
+	mainTheme.SetVolume(0.2f);
 }
 
 void UnloadAssets()
@@ -44,6 +52,8 @@ void UnloadAssets()
 	}
 
 	sounds.clear();
+
+	//music is automatically unloaded
 }
 
 raylib::Texture2D& GetTexture(std::string name)
@@ -54,4 +64,9 @@ raylib::Texture2D& GetTexture(std::string name)
 raylib::Sound& GetSound(std::string name)
 {
 	return sounds.at(name);
+}
+
+raylib::Music& GetMusic(std::string name)
+{
+	return musicFiles.at(name);
 }
