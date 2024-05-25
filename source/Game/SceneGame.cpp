@@ -88,6 +88,7 @@ void SceneGame::SetGameModifiers(GameModifiers modifiers)
 
 void SceneGame::StartGame()
 {
+	
 	//main
 	gameOver = false;
 	gamePaused = false;
@@ -103,7 +104,7 @@ void SceneGame::StartGame()
 	timePlayingSeconds = 0.0f;
 	totalLinesCleared = 0;
 	score = 0;
-	level = 0;
+	level = 1;
 
 	//pieces
 	holdingPiece = Piece(0); //no piece
@@ -120,6 +121,10 @@ void SceneGame::StartGame()
 			grid[y][x] = BlockCell(BLOCK_EMPTY, raylib::Color::Blank());
 		}
 	}
+
+	//restart music
+	raylib::Music& mainTheme = GetMusic("MainTheme");
+	mainTheme.Seek(0.0f);
 }
 
 void SceneGame::UpdateGameplay()
@@ -137,25 +142,39 @@ void SceneGame::UpdateGameplay()
 		{
 			//Clear lines
 			GetSound("LineClear").Play();
-			int scoreMultiplier = 0;
+			int numClearedLines = clearingLines.size();
 
 			for (int line : clearingLines)
-			{
 				ClearLine(line);
-				totalLinesCleared++;
 
-				if (scoreMultiplier == 0)
-					scoreMultiplier = 1;
-				else
-					scoreMultiplier *= 2;
+			totalLinesCleared += numClearedLines;
+
+			std::cout << "Cleared " + std::to_string(numClearedLines) + " line(s) " << std::endl;
+			
+			switch (numClearedLines)
+			{
+				//single
+				case 1:
+					score += 100 * level;
+					break;
+				//double
+				case 2:
+					score += 300 * level;
+					break;
+				//triple
+				case 3:
+					score += 500 * level;
+					break;
+				//tetris
+				case 4:
+					score += 800 * level;
+					break;
 			}
 
-			std::cout << "Cleared " + std::to_string(clearingLines.size()) + " line(s) " << std::endl;
-			score += 100 * scoreMultiplier;
 			isClearingLines = false;
 
 			//Level up every total 10 lines cleared
-			if (totalLinesCleared / 10 != (totalLinesCleared - clearingLines.size()) / 10)
+			if (totalLinesCleared / 10 != (totalLinesCleared - numClearedLines) / 10)
 			{
 				GetSound("LevelUp").Play();
 				level++;
@@ -260,7 +279,13 @@ void SceneGame::UpdatePieceGravity()
 		gravityPieceDeltaTime -= gravityMovementTime;
 
 		if (CanPieceExistAt(currentPiece, { currentPiecePosition.x, currentPiecePosition.y + 1 }))
+		{
 			currentPiecePosition = { currentPiecePosition.x, currentPiecePosition.y + 1 };
+
+			//plus one point for each cell dropped with soft drop
+			if (IsKeyDown(KEY_DOWN))
+				score += 1;
+		}
 		else
 		{
 			PlacePiece();
@@ -582,11 +607,18 @@ void SceneGame::HoldPiece()
 
 void SceneGame::HardDropPiece()
 {
+	int cellsMoved = 0;
+
 	//Instantly move piece downwards until it can't anymore
 	while (CanPieceExistAt(currentPiece, { currentPiecePosition.x, currentPiecePosition.y + 1 }))
+	{
 		currentPiecePosition = { currentPiecePosition.x, currentPiecePosition.y + 1 };
+		cellsMoved++;
+	}
 
-	std::cout << "Hard drop piece" << std::endl;
+	score += cellsMoved * 2;
+
+	std::cout << "Hard drop piece (" + std::to_string(cellsMoved) + " cells, +" + std::to_string(cellsMoved * 2) + " points)" << std::endl;
 }
 
 #pragma endregion
