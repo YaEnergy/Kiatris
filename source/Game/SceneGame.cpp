@@ -523,7 +523,7 @@ void SceneGame::DrawGame()
 	raylib::DrawText("Switched piece: " + std::to_string(hasSwitchedPiece), 10, 24, 36, (hasSwitchedPiece ? raylib::Color::Red() : raylib::Color::White()));
 #endif
 
-	//TODO: replace some of these with rectangle outline draws
+	//TODO: fix border corners
 	//Borders
 	raylib::Color borderColor = raylib::Color::SkyBlue();
 	borderColor.DrawLine({ gridX, fieldYPadding }, { gridX, fieldYPadding + gridSize.y }, 4.0f);
@@ -531,8 +531,12 @@ void SceneGame::DrawGame()
 	borderColor.DrawLine({ fieldX, fieldYPadding }, { fieldX + fieldSize.x, fieldYPadding }, 4.0f);
 	borderColor.DrawLine({ gridX, fieldYPadding + gridSize.y }, { gridX + gridSize.x, fieldYPadding + gridSize.y }, 4.0f);
 	
-	borderColor.DrawLine({ fieldX, fieldYPadding}, { fieldX, fieldYPadding + holdHeight + statTextFontSize * 8 + statPanelHeightPadding * 2 }, 4.0f);
-	borderColor.DrawLine({ fieldX, fieldYPadding + holdHeight }, { fieldX + UI_PIECE_LENGTH * blockSize, fieldYPadding + holdHeight }, 4.0f);
+	raylib::Color holdPieceBorderColor = hasSwitchedPiece ? raylib::Color::Red() : borderColor;
+	holdPieceBorderColor.DrawLine({ fieldX, fieldYPadding }, { fieldX + UI_PIECE_LENGTH * blockSize, fieldYPadding }, 4.0f);
+	holdPieceBorderColor.DrawLine({ fieldX, fieldYPadding }, { fieldX, fieldYPadding + holdHeight }, 4.0f);
+	holdPieceBorderColor.DrawLine({ fieldX, fieldYPadding + holdHeight }, { fieldX + UI_PIECE_LENGTH * blockSize, fieldYPadding + holdHeight }, 4.0f);
+
+	borderColor.DrawLine({ fieldX, fieldYPadding + holdHeight}, { fieldX, fieldYPadding + holdHeight + statTextFontSize * 8 + statPanelHeightPadding * 2 }, 4.0f);
 	borderColor.DrawLine({ fieldX, fieldYPadding + holdHeight + statTextFontSize * 8 + statPanelHeightPadding * 2 }, { fieldX + UI_PIECE_LENGTH * blockSize, fieldYPadding + holdHeight + statTextFontSize * 8 + statPanelHeightPadding * 2 }, 4.0f);
 
 	borderColor.DrawLine({ fieldX + fieldSize.x, fieldYPadding }, { fieldX + fieldSize.x, fieldYPadding + nextHeight }, 4.0f);

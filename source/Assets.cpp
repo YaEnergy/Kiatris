@@ -7,7 +7,7 @@ std::unordered_map<std::string, raylib::Music> musicFiles;
 void LoadAssets()
 {
 	//textures
-	textures.emplace("Icon", raylib::Texture2D("assets/Kiatris_icon.png"));
+	textures.emplace("Icon", raylib::Texture2D("assets/textures/kiatrisicon.png"));
 	textures.emplace("BlockPiece", raylib::Texture2D("assets/textures/piece_block.png"));
 	GetTexture("BlockPiece").SetWrap(TEXTURE_WRAP_REPEAT);
 
