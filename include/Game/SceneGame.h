@@ -66,6 +66,7 @@ class SceneGame : public Scene
 		void LineClearCheck();
 		void UpdateGameOver();
 		void EndGame();
+		void ReturnToMenu();
 
 		void DrawGame();
 

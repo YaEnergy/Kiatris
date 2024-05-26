@@ -335,8 +335,26 @@ void SceneGame::LineClearCheck()
 
 void SceneGame::UpdateGameOver()
 {
-	if (IsKeyPressed(KEY_SPACE))
-		StartGame();
+	if (IsKeyPressed(KEY_DOWN))
+		menuButtonIndex = Wrap(menuButtonIndex + 1, 0, 2);
+	else if (IsKeyPressed(KEY_UP))
+		menuButtonIndex = Wrap(menuButtonIndex - 1, 0, 2);
+
+	switch (menuButtonIndex)
+	{
+		//retry button
+		case 0:
+			if (IsKeyPressed(KEY_SPACE))
+				StartGame();
+
+			break;
+		//menu button
+		case 1:
+			if (IsKeyPressed(KEY_SPACE))
+				ReturnToMenu();
+
+			break;
+	}
 }
 
 void SceneGame::EndGame()
@@ -344,6 +362,16 @@ void SceneGame::EndGame()
 	GetSound("GameOver").Play();
 	gameOver = true;
 	gamePaused = false;
+	menuButtonIndex = 0;
+	currentPiece = Piece();
+}
+
+void SceneGame::ReturnToMenu()
+{
+	gameOver = false;
+	gamePaused = false;
+	menuState = MENU_TITLE;
+	menuButtonIndex = 0;
 }
 
 void SceneGame::DrawGame()
@@ -398,6 +426,23 @@ void SceneGame::DrawGame()
 		raylib::DrawText(pausedText, (int)(gridX + gridSize.x / 2.0f - gridSize.x / 4.0f), (int)(fieldYPadding + gridSize.y / 2.0f - pausedTextFontSize / 2.0f), pausedTextFontSize, raylib::Color::White());
 	}
 
+	//Draw game over overlay if dead
+	if (gameOver)
+	{
+		raylib::Rectangle(gridX, fieldYPadding, gridSize.x, gridSize.y).Draw(gridBackgroundColor);
+
+		std::string gameOverText = "GAME OVER";
+		int gameOverTextFontSize = (int)((float)BASE_FONT_SIZE / raylib::MeasureText(gameOverText, BASE_FONT_SIZE) * gridSize.x / 1.5f);
+		raylib::DrawText(gameOverText, (int)(gridX + gridSize.x / 2.0f - gridSize.x / 3.0f), (int)(fieldYPadding + gridSize.y / 2.0f - gameOverTextFontSize / 2.0f), gameOverTextFontSize, raylib::Color::White());
+
+		std::string retryText = "RETRY";
+		int retryTextFontSize = (int)((float)BASE_FONT_SIZE / raylib::MeasureText(retryText, BASE_FONT_SIZE) * gridSize.x / 2.0f);
+		raylib::DrawText(retryText, (int)(gridX + gridSize.x / 2.0f - gridSize.x / 4.0f), (int)(fieldYPadding + gridSize.y / 2.0f - gameOverTextFontSize / 2.0f + gameOverTextFontSize), retryTextFontSize, menuButtonIndex == 0 ? raylib::Color::Yellow() : raylib::Color::White());
+	
+		std::string menuText = "MENU";
+		int menuTextFontSize = (int)((float)BASE_FONT_SIZE / raylib::MeasureText(menuText, BASE_FONT_SIZE) * gridSize.x / 2.0f);
+		raylib::DrawText(menuText, (int)(gridX + gridSize.x / 2.0f - gridSize.x / 4.0f), (int)(fieldYPadding + gridSize.y / 2.0f - gameOverTextFontSize / 2.0f + gameOverTextFontSize + retryTextFontSize), menuTextFontSize, menuButtonIndex == 1 ? raylib::Color::Yellow() : raylib::Color::White());
+	}
 
 	//held piece
 	std::string holdText = "HELD";
@@ -742,9 +787,9 @@ void SceneGame::DrawGrid(float posX, float posY, float blockSize, raylib::Textur
 void SceneGame::UpdateTitleMenu()
 {
 	if (IsKeyPressed(KEY_DOWN))
-		menuButtonIndex = std::min(menuButtonIndex + 1, 3);
+		menuButtonIndex = Wrap(menuButtonIndex + 1, 0, 4);
 	else if (IsKeyPressed(KEY_UP))
-		menuButtonIndex = std::max(menuButtonIndex - 1, 0);
+		menuButtonIndex = Wrap(menuButtonIndex - 1, 0, 4);
 
 	//Press buttons
 	if (menuButtonIndex == BUTTON_START_INDEX && IsKeyPressed(KEY_SPACE))
