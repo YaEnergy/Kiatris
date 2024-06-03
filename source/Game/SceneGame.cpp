@@ -518,29 +518,25 @@ void SceneGame::DrawGame()
 	std::string timeValText = std::format("{:0>3}", std::truncf(timePlayingSeconds));
 	raylib::DrawText(timeValText, fieldX + 0.5f * blockSize, fieldYPadding + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize * 7 + statPanelHeightPadding, statTextFontSize, raylib::Color::White());
 
-#ifdef DEBUG
-	//Draw stats, temp
-	raylib::DrawText("Switched piece: " + std::to_string(hasSwitchedPiece), 10, 24, 36, (hasSwitchedPiece ? raylib::Color::Red() : raylib::Color::White()));
-#endif
-
-	//TODO: fix border corners
 	//Borders
 	raylib::Color borderColor = raylib::Color::SkyBlue();
-	borderColor.DrawLine({ gridX, fieldYPadding }, { gridX, fieldYPadding + gridSize.y }, 4.0f);
-	borderColor.DrawLine({ gridX + gridSize.x, fieldYPadding }, { gridX + gridSize.x, fieldYPadding + gridSize.y }, 4.0f);
-	borderColor.DrawLine({ fieldX, fieldYPadding }, { fieldX + fieldSize.x, fieldYPadding }, 4.0f);
-	borderColor.DrawLine({ gridX, fieldYPadding + gridSize.y }, { gridX + gridSize.x, fieldYPadding + gridSize.y }, 4.0f);
+	float borderThickness = 6.0f * std::min((float)fieldSize.x / DESIGN_WIDTH, (float)fieldSize.y / DESIGN_HEIGHT);
+
+	borderColor.DrawLine({ gridX, fieldYPadding }, { gridX, fieldYPadding + gridSize.y }, borderThickness);
+	borderColor.DrawLine({ gridX + gridSize.x, fieldYPadding }, { gridX + gridSize.x, fieldYPadding + gridSize.y }, borderThickness);
+	borderColor.DrawLine({ gridX - borderThickness / 2.0f, fieldYPadding }, { fieldX + fieldSize.x + borderThickness / 2.0f, fieldYPadding }, borderThickness);
+	borderColor.DrawLine({ gridX - borderThickness / 2.0f, fieldYPadding + gridSize.y }, { gridX + gridSize.x + borderThickness / 2.0f, fieldYPadding + gridSize.y }, borderThickness);
 	
 	raylib::Color holdPieceBorderColor = hasSwitchedPiece ? raylib::Color::Red() : borderColor;
-	holdPieceBorderColor.DrawLine({ fieldX, fieldYPadding }, { fieldX + UI_PIECE_LENGTH * blockSize, fieldYPadding }, 4.0f);
-	holdPieceBorderColor.DrawLine({ fieldX, fieldYPadding }, { fieldX, fieldYPadding + holdHeight }, 4.0f);
-	holdPieceBorderColor.DrawLine({ fieldX, fieldYPadding + holdHeight }, { fieldX + UI_PIECE_LENGTH * blockSize, fieldYPadding + holdHeight }, 4.0f);
+	holdPieceBorderColor.DrawLine({ fieldX - borderThickness / 2.0f, fieldYPadding }, { fieldX + UI_PIECE_LENGTH * blockSize - borderThickness / 2.0f, fieldYPadding }, borderThickness);
+	holdPieceBorderColor.DrawLine({ fieldX, fieldYPadding }, { fieldX, fieldYPadding + holdHeight }, borderThickness);
+	holdPieceBorderColor.DrawLine({ fieldX - borderThickness / 2.0f, fieldYPadding + holdHeight }, { fieldX + UI_PIECE_LENGTH * blockSize - borderThickness / 2.0f, fieldYPadding + holdHeight }, borderThickness);
 
-	borderColor.DrawLine({ fieldX, fieldYPadding + holdHeight}, { fieldX, fieldYPadding + holdHeight + statTextFontSize * 8 + statPanelHeightPadding * 2 }, 4.0f);
-	borderColor.DrawLine({ fieldX, fieldYPadding + holdHeight + statTextFontSize * 8 + statPanelHeightPadding * 2 }, { fieldX + UI_PIECE_LENGTH * blockSize, fieldYPadding + holdHeight + statTextFontSize * 8 + statPanelHeightPadding * 2 }, 4.0f);
+	borderColor.DrawLine({ fieldX, fieldYPadding + holdHeight}, { fieldX, fieldYPadding + holdHeight + statTextFontSize * 8 + statPanelHeightPadding * 2 }, borderThickness);
+	borderColor.DrawLine({ fieldX - borderThickness / 2.0f, fieldYPadding + holdHeight + statTextFontSize * 8 + statPanelHeightPadding * 2 }, { fieldX - borderThickness / 2.0f + UI_PIECE_LENGTH * blockSize, fieldYPadding + holdHeight + statTextFontSize * 8 + statPanelHeightPadding * 2 }, borderThickness);
 
-	borderColor.DrawLine({ fieldX + fieldSize.x, fieldYPadding }, { fieldX + fieldSize.x, fieldYPadding + nextHeight }, 4.0f);
-	borderColor.DrawLine({ gridX + gridSize.x, fieldYPadding + nextHeight }, { fieldX + fieldSize.x, fieldYPadding + nextHeight }, 4.0f);
+	borderColor.DrawLine({ fieldX + fieldSize.x, fieldYPadding }, { fieldX + fieldSize.x, fieldYPadding + nextHeight }, borderThickness);
+	borderColor.DrawLine({ gridX + gridSize.x, fieldYPadding + nextHeight }, { fieldX + fieldSize.x + borderThickness / 2.0f, fieldYPadding + nextHeight }, borderThickness);
 }
 
 #pragma endregion
@@ -795,24 +791,38 @@ void SceneGame::UpdateTitleMenu()
 	else if (IsKeyPressed(KEY_UP))
 		menuButtonIndex = Wrap(menuButtonIndex - 1, 0, 4);
 
-	//Press buttons
-	if (menuButtonIndex == BUTTON_START_INDEX && IsKeyPressed(KEY_SPACE))
+	switch (menuButtonIndex)
 	{
-		menuState = MENU_NONE;
-		StartGame();
-	}
-	else if (menuButtonIndex == BUTTON_OPTIONS_INDEX && IsKeyPressed(KEY_SPACE))
-	{
-		menuState = MENU_OPTIONS;
-	}
-	else if (menuButtonIndex == BUTTON_CONTROLS_INDEX && IsKeyPressed(KEY_SPACE))
-	{
-		menuState = MENU_CONTROLS;
-	}
-	else if (menuButtonIndex == BUTTON_QUIT_INDEX && IsKeyPressed(KEY_SPACE))
-	{
-		//TODO: currently actually crashes the game, fix
-		gameWindow.Close();
+		//start button
+		case 0:
+			if (IsKeyPressed(KEY_SPACE))
+			{
+				menuState = MENU_NONE;
+				StartGame();
+			}
+			break;
+		//options button
+		case 1:
+			if (IsKeyPressed(KEY_SPACE))
+			{
+				menuState = MENU_OPTIONS;
+			}
+			break;
+		//controls button
+		case 2:
+			if (IsKeyPressed(KEY_SPACE))
+			{
+				menuState = MENU_CONTROLS;
+			}
+			break;
+		//quit button
+		case 3:
+			if (IsKeyPressed(KEY_SPACE))
+			{
+				//TODO: currently actually crashes the game, fix
+				gameWindow.Close();
+			}
+			break;
 	}
 }
 
@@ -828,11 +838,15 @@ void SceneGame::UpdateControlsMenu()
 
 void SceneGame::DrawTitleMenu() 
 {
+	const int BASE_FONT_SIZE = 12;
+
 	int screenWidth = gameWindow.GetWidth();
 	int screenHeight = gameWindow.GetHeight();
 
+	
+
 	//Background
-	raylib::Color backgroundColor = raylib::Color(30, 30, 30, 120);
+	raylib::Color backgroundColor = raylib::Color::Black().Alpha(0.4f);
 	backgroundColor.DrawRectangle(0, 0, screenWidth, screenHeight);
 
 	//Icon
@@ -841,9 +855,23 @@ void SceneGame::DrawTitleMenu()
 	iconTexture.Draw(iconSourceRect, raylib::Rectangle{ screenWidth / 2.0f, screenHeight / 2.0f, (float)iconTexture.width, (float)iconTexture.height }, { (float)iconTexture.width / 2.0f, (float)iconTexture.height / 2.0f }, 0.0f, raylib::Color::White());
 
 	//Buttons
+	int buttonTextSize = 64 * std::min((float)screenWidth / DESIGN_WIDTH, (float)screenHeight / DESIGN_HEIGHT);
 
-	//For debug purposes
-	DrawText(TextFormat("Button index: %i", menuButtonIndex), 12, 12 + 24, 24, raylib::Color::White());
+	std::string startText = "START";
+	int startWidth = raylib::MeasureText(startText, buttonTextSize);
+	raylib::DrawText(startText, (int)(screenWidth / 2.0f - startWidth / 2.0f), (int)(screenHeight / 2.0f - buttonTextSize / 2.0f), buttonTextSize, menuButtonIndex == 0 ? raylib::Color::Yellow() : raylib::Color::White());
+
+	std::string optionsText = "OPTIONS";
+	int optionsWidth = raylib::MeasureText(optionsText, buttonTextSize);
+	raylib::DrawText(optionsText, (int)(screenWidth / 2.0f - optionsWidth / 2.0f), (int)(screenHeight / 2.0f + buttonTextSize - buttonTextSize / 2.0f), buttonTextSize, menuButtonIndex == 1 ? raylib::Color::Yellow() : raylib::Color::White());
+
+	std::string controlsText = "CONTROLS";
+	int controlsWidth = raylib::MeasureText(controlsText, buttonTextSize);
+	raylib::DrawText(controlsText, (int)(screenWidth / 2.0f - optionsWidth / 2.0f), (int)(screenHeight / 2.0f + buttonTextSize * 2 - buttonTextSize / 2.0f), buttonTextSize, menuButtonIndex == 2 ? raylib::Color::Yellow() : raylib::Color::White());
+
+	std::string quitText = "QUIT";
+	int quitWidth = raylib::MeasureText(quitText, buttonTextSize);
+	raylib::DrawText(quitText, (int)(screenWidth / 2.0f - quitWidth / 2.0f), (int)(screenHeight / 2.0f + buttonTextSize * 3 - buttonTextSize / 2.0f), buttonTextSize, menuButtonIndex == 3 ? raylib::Color::Yellow() : raylib::Color::White());
 }
 
 void SceneGame::DrawOptionsMenu()
@@ -876,6 +904,9 @@ void SceneGame::Draw()
 		default:
 			break;
 	}
+
+	//For debug purposes
+	DrawText(TextFormat("Button index: %i", menuButtonIndex), 12, 12 + 24, 24, raylib::Color::White());
 }
 
 void SceneGame::Destroy()

@@ -18,11 +18,6 @@ enum MenuState
 class SceneGame : public Scene
 {
 	private:
-		const int BUTTON_START_INDEX = 0;
-		const int BUTTON_OPTIONS_INDEX = 1;
-		const int BUTTON_CONTROLS_INDEX = 2;
-		const int BUTTON_QUIT_INDEX = 3;
-
 		raylib::Window& gameWindow;
 
 		GameModifiers gameModifiers;
