@@ -181,6 +181,9 @@ void SceneGame::UpdateGameplay()
 			}
 
 			clearingLines.clear();
+
+			movementPieceDeltaTime = 0.0f;
+			gravityPieceDeltaTime = 0.0f;
 		}
 		else
 			return;
@@ -263,7 +266,10 @@ void SceneGame::UpdatePieceMovement()
 
 	//if new position is successful
 	if (positionSuccess) //for rotations
+	{
 		currentPiece = piece;
+		std::cout << "moved" << std::endl;
+	}
 }
 
 void SceneGame::UpdatePieceGravity()
