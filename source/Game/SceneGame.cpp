@@ -844,19 +844,35 @@ void SceneGame::DrawTitleMenu()
 	int screenWidth = gameWindow.GetWidth();
 	int screenHeight = gameWindow.GetHeight();
 
-	
+	float aspectScale = std::min((float)screenWidth / DESIGN_WIDTH, (float)screenHeight / DESIGN_HEIGHT);
 
 	//Background
 	raylib::Color backgroundColor = raylib::Color::Black().Alpha(0.4f);
 	backgroundColor.DrawRectangle(0, 0, screenWidth, screenHeight);
 
 	//Icon
+	float iconScale = 1.0f * aspectScale;
 	raylib::Texture2D& iconTexture = GetTexture("Icon");
 	raylib::Rectangle iconSourceRect = raylib::Rectangle{ 0, 0, (float)iconTexture.width, (float)iconTexture.height };
-	iconTexture.Draw(iconSourceRect, raylib::Rectangle{ screenWidth / 2.0f, screenHeight / 2.0f, (float)iconTexture.width, (float)iconTexture.height }, { (float)iconTexture.width / 2.0f, (float)iconTexture.height / 2.0f }, 0.0f, raylib::Color::White());
+	iconTexture.Draw(iconSourceRect, raylib::Rectangle{ screenWidth / 2.0f, screenHeight / 2.0f - (float)iconTexture.height * iconScale, (float)iconTexture.width * iconScale, (float)iconTexture.height * iconScale }, { (float)iconTexture.width / 2.0f * iconScale, (float)iconTexture.height / 2.0f * iconScale }, 0.0f, raylib::Color::White());
+
+	//Title
+	std::string titleText = "KIATRIS";
+	int titleTextSize = 80 * aspectScale;
+	int titleWidth = raylib::MeasureText("KIATRIS", titleTextSize);
+	float titleTextX = (screenWidth - titleWidth) / 2.0f;
+	for (int i = 0; i < titleText.length(); i++)
+	{
+		std::string titleChar = std::string(1, titleText.at(i));
+		
+		raylib::DrawText(std::string(1, titleText.at(i)), (int)titleTextX, (int)(screenHeight / 2.0f - (float)iconTexture.height * iconScale * 1.5f - titleTextSize + sinf(gameWindow.GetTime() * 3.0f + i) * 4.0f * aspectScale), titleTextSize, raylib::Color::FromHSV(Wrap(gameWindow.GetTime() * 120.0f + 30.0f * i, 0.0f, 360.0f), 1.0f, 1.0f));
+		
+		int titleCharWidth = raylib::MeasureText(titleChar, titleTextSize);
+		titleTextX += titleCharWidth + (titleTextSize / 10);
+	}
 
 	//Buttons
-	int buttonTextSize = 64 * std::min((float)screenWidth / DESIGN_WIDTH, (float)screenHeight / DESIGN_HEIGHT);
+	int buttonTextSize = 64 * aspectScale;
 
 	std::string startText = "START";
 	int startWidth = raylib::MeasureText(startText, buttonTextSize);
