@@ -266,10 +266,7 @@ void SceneGame::UpdatePieceMovement()
 
 	//if new position is successful
 	if (positionSuccess) //for rotations
-	{
 		currentPiece = piece;
-		std::cout << "moved" << std::endl;
-	}
 }
 
 void SceneGame::UpdatePieceGravity()
@@ -501,7 +498,7 @@ void SceneGame::DrawGame()
 	std::string scoreText = "SCORE";
 	raylib::DrawText(scoreText, fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statPanelHeightPadding, statTextFontSize, raylib::Color::White());
 
-	std::string scoreValText = std::format("{:0>5}", score);
+	std::string scoreValText = std::format("{:0>6}", score);
 	raylib::DrawText(scoreValText, fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize + statPanelHeightPadding, statTextFontSize, raylib::Color::White());
 
 	//Level
@@ -527,6 +524,12 @@ void SceneGame::DrawGame()
 
 	//Borders
 	raylib::Color borderColor = raylib::Color::SkyBlue();
+	
+	if (gameOver)
+		borderColor = (Wrap(gameWindow.GetTime(), 0.0f, 1.0f) <= 0.5f || !showStrobingLights) ? raylib::Color::Red() : borderColor;
+	else if (isClearingLines)
+		borderColor = raylib::Color::Yellow();
+
 	float borderThickness = 6.0f * std::min((float)fieldSize.x / DESIGN_WIDTH, (float)fieldSize.y / DESIGN_HEIGHT);
 
 	borderColor.DrawLine({ gridX, fieldY }, { gridX, fieldY + gridSize.y }, borderThickness);

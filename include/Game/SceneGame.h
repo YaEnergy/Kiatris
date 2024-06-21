@@ -21,6 +21,7 @@ class SceneGame : public Scene
 		raylib::Window& gameWindow;
 
 		GameModifiers gameModifiers;
+		bool showStrobingLights = true;
 
 		Piece currentPiece;
 		Vector2Int currentPiecePosition = { 0, 0 };
