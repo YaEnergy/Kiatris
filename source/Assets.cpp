@@ -3,6 +3,7 @@
 std::unordered_map<std::string, raylib::Texture2D> textures;
 std::unordered_map<std::string, raylib::Sound> sounds;
 std::unordered_map<std::string, raylib::Music> musicFiles;
+std::unordered_map<std::string, raylib::Font> fonts;
 
 void LoadAssets()
 {
@@ -23,6 +24,9 @@ void LoadAssets()
 	raylib::Music& mainTheme = GetMusic("MainTheme");
 	mainTheme.SetLooping(true);
 	mainTheme.SetVolume(0.2f);
+
+	//fonts
+	fonts.emplace("MainFont", raylib::Font());
 }
 
 void UnloadAssets()
@@ -69,4 +73,9 @@ raylib::Sound& GetSound(std::string name)
 raylib::Music& GetMusic(std::string name)
 {
 	return musicFiles.at(name);
+}
+
+raylib::Font& GetFont(std::string name)
+{
+	return fonts.at(name);
 }

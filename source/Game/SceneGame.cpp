@@ -4,6 +4,17 @@
 
 #include <format>
 
+const float BASE_FONT_SIZE = 12.0f;
+
+//Base font spacing multiplier
+const float BASE_FONT_SPACING = 0.1f;
+
+/// Returns a text size that fits the given text within the specified width using the specified font and spacing (1.0 = letter height)
+static float FitTextWidth(raylib::Font& font, const std::string text, const float width, const float percentageSpacing)
+{
+	return BASE_FONT_SIZE / font.MeasureText(text, BASE_FONT_SIZE, BASE_FONT_SIZE * percentageSpacing).x * width;
+}
+
 void SceneGame::Init()
 {
 	
@@ -380,12 +391,14 @@ void SceneGame::ReturnToMenu()
 void SceneGame::DrawGame()
 {
 	const int UI_PIECE_LENGTH = 4;
-	const int BASE_FONT_SIZE = 12;
+	const float BASE_FONT_SIZE = 12.0f;
 
 	float windowTime = gameWindow.GetTime();
 
 	int screenWidth = gameWindow.GetWidth();
 	int screenHeight = gameWindow.GetHeight();
+
+	raylib::Font& mainFont = GetFont("MainFont");
 
 	raylib::Color gridBackgroundColor = raylib::Color::Black().Alpha(0.4f);
 
@@ -426,8 +439,10 @@ void SceneGame::DrawGame()
 		raylib::Rectangle(gridX, fieldY, gridSize.x, gridSize.y).Draw(gridBackgroundColor);
 
 		std::string pausedText = "PAUSED";
-		int pausedTextFontSize = (int)((float)BASE_FONT_SIZE / raylib::MeasureText(pausedText, BASE_FONT_SIZE) * gridSize.x / 2.0f);
-		raylib::DrawText(pausedText, (int)(gridX + gridSize.x / 2.0f - gridSize.x / 4.0f), (int)(fieldY + gridSize.y / 2.0f - pausedTextFontSize / 2.0f), pausedTextFontSize, raylib::Color::White());
+		float pausedTextFontSize = FitTextWidth(mainFont, pausedText, gridSize.x / 2.0f, BASE_FONT_SPACING);
+
+		if (!showStrobingLights || Wrap(gameWindow.GetTime(), 0.0f, 1.0f) <= 0.5f)
+			mainFont.DrawText(pausedText, raylib::Vector2(gridX + gridSize.x / 2.0f - gridSize.x / 4.0f, fieldY + gridSize.y / 2.0f - pausedTextFontSize / 2.0f), pausedTextFontSize, pausedTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
 	}
 
 	//Draw game over overlay if dead
@@ -436,27 +451,29 @@ void SceneGame::DrawGame()
 		raylib::Rectangle(gridX, fieldY, gridSize.x, gridSize.y).Draw(gridBackgroundColor);
 
 		std::string gameOverText = "GAME OVER";
-		int gameOverTextFontSize = (int)((float)BASE_FONT_SIZE / raylib::MeasureText(gameOverText, BASE_FONT_SIZE) * gridSize.x / 1.5f);
-		raylib::DrawText(gameOverText, (int)(gridX + gridSize.x / 2.0f - gridSize.x / 3.0f), (int)(fieldY + gridSize.y / 2.0f - gameOverTextFontSize / 2.0f), gameOverTextFontSize, raylib::Color::White());
+		float gameOverTextFontSize = FitTextWidth(mainFont, gameOverText, gridSize.x / 1.5f, BASE_FONT_SPACING);
+
+		if (!showStrobingLights || Wrap(gameWindow.GetTime(), 0.0f, 1.0f) > 0.5f)
+			mainFont.DrawText(gameOverText, raylib::Vector2(gridX + gridSize.x / 2.0f - gridSize.x / 3.0f, fieldY + gridSize.y / 2.0f - gameOverTextFontSize / 2.0f), gameOverTextFontSize, gameOverTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
 
 		std::string retryText = "RETRY";
-		int retryTextFontSize = (int)((float)BASE_FONT_SIZE / raylib::MeasureText(retryText, BASE_FONT_SIZE) * gridSize.x / 2.0f);
-		raylib::DrawText(retryText, (int)(gridX + gridSize.x / 2.0f - gridSize.x / 4.0f), (int)(fieldY + gridSize.y / 2.0f - gameOverTextFontSize / 2.0f + gameOverTextFontSize), retryTextFontSize, menuButtonIndex == 0 ? raylib::Color::Yellow() : raylib::Color::White());
+		float retryTextFontSize = FitTextWidth(mainFont, retryText, gridSize.x / 2.0f, BASE_FONT_SPACING);
+		mainFont.DrawText(retryText, raylib::Vector2(gridX + gridSize.x / 2.0f - gridSize.x / 4.0f, fieldY + gridSize.y / 2.0f - gameOverTextFontSize / 2.0f + gameOverTextFontSize), retryTextFontSize, retryTextFontSize * BASE_FONT_SPACING, menuButtonIndex == 0 ? raylib::Color::Yellow() : raylib::Color::White());
 	
 		std::string menuText = "MENU";
-		int menuTextFontSize = (int)((float)BASE_FONT_SIZE / raylib::MeasureText(menuText, BASE_FONT_SIZE) * gridSize.x / 2.0f);
-		raylib::DrawText(menuText, (int)(gridX + gridSize.x / 2.0f - gridSize.x / 4.0f), (int)(fieldY + gridSize.y / 2.0f - gameOverTextFontSize / 2.0f + gameOverTextFontSize + retryTextFontSize), menuTextFontSize, menuButtonIndex == 1 ? raylib::Color::Yellow() : raylib::Color::White());
+		int menuTextFontSize = FitTextWidth(mainFont, menuText, gridSize.x / 2.0f, BASE_FONT_SPACING);
+		mainFont.DrawText(menuText, raylib::Vector2(gridX + gridSize.x / 2.0f - gridSize.x / 4.0f, fieldY + gridSize.y / 2.0f - gameOverTextFontSize / 2.0f + gameOverTextFontSize + retryTextFontSize), menuTextFontSize, menuTextFontSize * BASE_FONT_SPACING, menuButtonIndex == 1 ? raylib::Color::Yellow() : raylib::Color::White());
 	}
 
 	//held piece
 	std::string holdText = "HELD";
-	int holdTextFontSize = (int)((float)BASE_FONT_SIZE / raylib::MeasureText(holdText, BASE_FONT_SIZE) * (UI_PIECE_LENGTH - 1.0f) * blockSize);
-	int holdTextWidth = raylib::MeasureText(holdText, holdTextFontSize);
+	float holdTextFontSize = FitTextWidth(mainFont, holdText, (UI_PIECE_LENGTH - 1.0f) * blockSize, BASE_FONT_SPACING);
+	float holdTextWidth = mainFont.MeasureText(holdText, holdTextFontSize, holdTextFontSize / 10.0f).x;
 
 	float holdHeight = blockSize * UI_PIECE_LENGTH + holdTextFontSize;
 	gridBackgroundColor.DrawRectangle({ fieldX, fieldY, blockSize * UI_PIECE_LENGTH, holdHeight });
 
-	raylib::DrawText(holdText, gridX - (UI_PIECE_LENGTH - 0.5f) * blockSize, fieldY, holdTextFontSize, raylib::Color::White());
+	mainFont.DrawText(holdText, raylib::Vector2(gridX - (UI_PIECE_LENGTH - 0.5f) * blockSize, fieldY), holdTextFontSize, holdTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
 
 	float holdPieceStartX = gridX - 4 * blockSize;
 	for (int i = 0; i < holdingPiece.numBlocks; i++)
@@ -468,13 +485,13 @@ void SceneGame::DrawGame()
 
 	//up and coming pieces
 	std::string nextText = "NEXT";
-	int nextTextFontSize = (int)((float)BASE_FONT_SIZE / raylib::MeasureText(nextText, BASE_FONT_SIZE) * (UI_PIECE_LENGTH - 1.0f) * blockSize);
-	int nextTextWidth = raylib::MeasureText(nextText, nextTextFontSize);
+	float nextTextFontSize = FitTextWidth(mainFont, nextText, (UI_PIECE_LENGTH - 1.0f) * blockSize, BASE_FONT_SPACING);
+	float nextTextWidth = mainFont.MeasureText(nextText, nextTextFontSize, nextTextFontSize * BASE_FONT_SPACING).x;
 
 	float nextHeight = blockSize * (UI_PIECE_LENGTH + 1) * gameModifiers.NumUpAndComingPieces - blockSize + nextTextFontSize;
 	gridBackgroundColor.DrawRectangle({ gridX + gridSize.x, fieldY, blockSize * UI_PIECE_LENGTH, nextHeight });
 
-	raylib::DrawText(nextText, gridX + gridSize.x + 0.5f * blockSize, fieldY, nextTextFontSize, raylib::Color::White());
+	mainFont.DrawText(nextText, raylib::Vector2(gridX + gridSize.x + 0.5f * blockSize, fieldY), nextTextFontSize, nextTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
 
 	int nextPieceStartX = gridX + gridSize.x;
 	for (int pieceIndex = 0; pieceIndex < gameModifiers.NumUpAndComingPieces; pieceIndex++)
@@ -491,36 +508,37 @@ void SceneGame::DrawGame()
 
 	//Statistics
 	int statPanelHeightPadding = 10;
-	int statTextFontSize = (int)((float)BASE_FONT_SIZE / raylib::MeasureText("AAAAA", BASE_FONT_SIZE) * (UI_PIECE_LENGTH - 1.0f) * blockSize);
+	float statTextFontSize = FitTextWidth(mainFont, "AAAAA", (UI_PIECE_LENGTH - 1.0f) * blockSize, BASE_FONT_SPACING);
 
 	gridBackgroundColor.DrawRectangle({ fieldX, fieldY + holdHeight, blockSize * UI_PIECE_LENGTH, statTextFontSize * 8.0f + statPanelHeightPadding * 2.0f });
+	
 	//Score
 	std::string scoreText = "SCORE";
-	raylib::DrawText(scoreText, fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statPanelHeightPadding, statTextFontSize, raylib::Color::White());
+	mainFont.DrawText(scoreText, raylib::Vector2(fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statPanelHeightPadding), statTextFontSize, statTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
 
 	std::string scoreValText = std::format("{:0>6}", score);
-	raylib::DrawText(scoreValText, fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize + statPanelHeightPadding, statTextFontSize, raylib::Color::White());
+	mainFont.DrawText(scoreValText, raylib::Vector2(fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize + statPanelHeightPadding), statTextFontSize, statTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
 
 	//Level
 	std::string levelText = "LEVEL";
-	raylib::DrawText(levelText, fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize * 2 + statPanelHeightPadding, statTextFontSize, raylib::Color::White());
+	mainFont.DrawText(levelText, raylib::Vector2(fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize * 2 + statPanelHeightPadding), statTextFontSize, statTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
 
 	std::string levelValText = std::format("{:0>3}", level);
-	raylib::DrawText(levelValText, fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize * 3 + statPanelHeightPadding, statTextFontSize, raylib::Color::White());
+	mainFont.DrawText(levelValText, raylib::Vector2(fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize * 3 + statPanelHeightPadding), statTextFontSize, statTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
 	
 	//Cleared lines
 	std::string clearedText = "LINES";
-	raylib::DrawText(clearedText, fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize * 4 + statPanelHeightPadding, statTextFontSize, raylib::Color::White());
+	mainFont.DrawText(clearedText, raylib::Vector2(fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize * 4 + statPanelHeightPadding), statTextFontSize, statTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
 
 	std::string clearedValText = std::format("{:0>3}", totalLinesCleared);
-	raylib::DrawText(clearedValText, fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize * 5 + statPanelHeightPadding, statTextFontSize, raylib::Color::White());
+	mainFont.DrawText(clearedValText, raylib::Vector2(fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize * 5 + statPanelHeightPadding), statTextFontSize, statTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
 
 	//Time
 	std::string timeText = "TIME";
-	raylib::DrawText(timeText, fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize * 6 + statPanelHeightPadding, statTextFontSize, raylib::Color::White());
+	mainFont.DrawText(timeText, raylib::Vector2(fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize * 6 + statPanelHeightPadding), statTextFontSize, statTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
 
 	std::string timeValText = std::format("{:0>3}", std::truncf(timePlayingSeconds));
-	raylib::DrawText(timeValText, fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize * 7 + statPanelHeightPadding, statTextFontSize, raylib::Color::White());
+	mainFont.DrawText(timeValText, raylib::Vector2(fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize * 7 + statPanelHeightPadding), statTextFontSize, statTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
 
 	//Borders
 	raylib::Color borderColor = raylib::Color::SkyBlue();
@@ -848,12 +866,12 @@ void SceneGame::UpdateControlsMenu()
 
 void SceneGame::DrawTitleMenu() 
 {
-	const int BASE_FONT_SIZE = 12;
-
 	int screenWidth = gameWindow.GetWidth();
 	int screenHeight = gameWindow.GetHeight();
 
 	float aspectScale = std::min((float)screenWidth / DESIGN_WIDTH, (float)screenHeight / DESIGN_HEIGHT);
+
+	raylib::Font& mainFont = GetFont("MainFont");
 
 	//Background
 	raylib::Color backgroundColor = raylib::Color::Black().Alpha(0.4f);
@@ -867,37 +885,38 @@ void SceneGame::DrawTitleMenu()
 
 	//Title
 	std::string titleText = "KIATRIS";
-	int titleTextSize = 80 * aspectScale;
-	int titleWidth = raylib::MeasureText("KIATRIS", titleTextSize);
+	float titleTextSize = 80 * aspectScale;
+	float titleWidth = mainFont.MeasureText(titleText, titleTextSize, titleTextSize * BASE_FONT_SPACING).x;
 	float titleTextX = (screenWidth - titleWidth) / 2.0f;
+
 	for (int i = 0; i < titleText.length(); i++)
 	{
 		std::string titleChar = std::string(1, titleText.at(i));
-		
-		raylib::DrawText(std::string(1, titleText.at(i)), (int)titleTextX, (int)(screenHeight / 2.0f - (float)iconTexture.height * iconScale * 1.5f - titleTextSize + sinf(gameWindow.GetTime() * 3.0f + i) * 4.0f * aspectScale), titleTextSize, raylib::Color::FromHSV(Wrap(gameWindow.GetTime() * 120.0f + 30.0f * i, 0.0f, 360.0f), 1.0f, 1.0f));
+
+		mainFont.DrawText(std::string(1, titleText.at(i)), raylib::Vector2(titleTextX, screenHeight / 2.0f - (float)iconTexture.height * iconScale * 1.5f - titleTextSize + sinf(gameWindow.GetTime() * 3.0f + i) * 4.0f * aspectScale), titleTextSize, titleTextSize * BASE_FONT_SPACING, raylib::Color::FromHSV(Wrap(gameWindow.GetTime() * 120.0f + 30.0f * i, 0.0f, 360.0f), 1.0f, 1.0f));
 		
 		int titleCharWidth = raylib::MeasureText(titleChar, titleTextSize);
 		titleTextX += titleCharWidth + (titleTextSize / 10);
 	}
 
 	//Buttons
-	int buttonTextSize = 64 * aspectScale;
+	float buttonTextSize = 64 * aspectScale;
 
 	std::string startText = "START";
-	int startWidth = raylib::MeasureText(startText, buttonTextSize);
-	raylib::DrawText(startText, (int)(screenWidth / 2.0f - startWidth / 2.0f), (int)(screenHeight / 2.0f - buttonTextSize / 2.0f), buttonTextSize, menuButtonIndex == 0 ? raylib::Color::Yellow() : raylib::Color::White());
+	float startWidth = mainFont.MeasureText(startText, buttonTextSize, buttonTextSize * BASE_FONT_SPACING).x;
+	mainFont.DrawText(startText, raylib::Vector2(screenWidth / 2.0f - startWidth / 2.0f, screenHeight / 2.0f - buttonTextSize / 2.0f), buttonTextSize, buttonTextSize * BASE_FONT_SPACING, menuButtonIndex == 0 ? raylib::Color::Yellow() : raylib::Color::White());
 
 	std::string optionsText = "OPTIONS";
-	int optionsWidth = raylib::MeasureText(optionsText, buttonTextSize);
-	raylib::DrawText(optionsText, (int)(screenWidth / 2.0f - optionsWidth / 2.0f), (int)(screenHeight / 2.0f + buttonTextSize - buttonTextSize / 2.0f), buttonTextSize, menuButtonIndex == 1 ? raylib::Color::Yellow() : raylib::Color::White());
+	float optionsWidth = mainFont.MeasureText(optionsText, buttonTextSize, buttonTextSize * BASE_FONT_SPACING).x;
+	mainFont.DrawText(optionsText, raylib::Vector2(screenWidth / 2.0f - optionsWidth / 2.0f, screenHeight / 2.0f + buttonTextSize - buttonTextSize / 2.0f), buttonTextSize, buttonTextSize * BASE_FONT_SPACING, menuButtonIndex == 1 ? raylib::Color::Yellow() : raylib::Color::White());
 
 	std::string controlsText = "CONTROLS";
-	int controlsWidth = raylib::MeasureText(controlsText, buttonTextSize);
-	raylib::DrawText(controlsText, (int)(screenWidth / 2.0f - optionsWidth / 2.0f), (int)(screenHeight / 2.0f + buttonTextSize * 2 - buttonTextSize / 2.0f), buttonTextSize, menuButtonIndex == 2 ? raylib::Color::Yellow() : raylib::Color::White());
+	float controlsWidth = mainFont.MeasureText(controlsText, buttonTextSize, buttonTextSize * BASE_FONT_SPACING).x;
+	mainFont.DrawText(controlsText, raylib::Vector2(screenWidth / 2.0f - optionsWidth / 2.0f, screenHeight / 2.0f + buttonTextSize * 2 - buttonTextSize / 2.0f), buttonTextSize, buttonTextSize * BASE_FONT_SPACING, menuButtonIndex == 2 ? raylib::Color::Yellow() : raylib::Color::White());
 
 	std::string quitText = "QUIT";
-	int quitWidth = raylib::MeasureText(quitText, buttonTextSize);
-	raylib::DrawText(quitText, (int)(screenWidth / 2.0f - quitWidth / 2.0f), (int)(screenHeight / 2.0f + buttonTextSize * 3 - buttonTextSize / 2.0f), buttonTextSize, menuButtonIndex == 3 ? raylib::Color::Yellow() : raylib::Color::White());
+	float quitWidth = mainFont.MeasureText(quitText, buttonTextSize, buttonTextSize * BASE_FONT_SPACING).x;
+	mainFont.DrawText(quitText, raylib::Vector2(screenWidth / 2.0f - quitWidth / 2.0f, screenHeight / 2.0f + buttonTextSize * 3 - buttonTextSize / 2.0f), buttonTextSize, buttonTextSize * BASE_FONT_SPACING, menuButtonIndex == 3 ? raylib::Color::Yellow() : raylib::Color::White());
 }
 
 void SceneGame::DrawOptionsMenu()

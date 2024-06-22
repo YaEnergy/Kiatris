@@ -14,3 +14,5 @@ raylib::Texture2D& GetTexture(std::string name);
 raylib::Sound& GetSound(std::string name);
 
 raylib::Music& GetMusic(std::string name);
+
+raylib::Font& GetFont(std::string name);
