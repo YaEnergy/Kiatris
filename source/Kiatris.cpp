@@ -33,7 +33,7 @@ class Game
 			raylib::Image icon = raylib::Image("assets/textures/kiatrisicon.png");
 			window.SetIcon(icon);
 
-			SceneGame gameScene(window, { 3, {10, 20}, true});
+			SceneGame gameScene(window, GameOptions{ 3, Vector2Int{10, 20}, true, true});
 			sceneManager.SetScene(&gameScene);
 			
 			window.SetState(FLAG_WINDOW_RESIZABLE);

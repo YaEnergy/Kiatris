@@ -33,6 +33,9 @@ void SceneGame::Update()
 		case MENU_CONTROLS:
 			UpdateControlsMenu();
 			break;
+		case MENU_CREDITS:
+			UpdateCreditsMenu();
+			break;
 		default:
 
 			if (gameOver)
@@ -68,35 +71,6 @@ void SceneGame::Update()
 
 #pragma region Gameplay
 
-void SceneGame::SetGameModifiers(GameModifiers modifiers)
-{
-	//Delete old grid
-	if (grid != nullptr)
-	{
-		for (int y = 0; y < gameModifiers.GridSize.y; y++)
-			delete[] grid[y];
-
-		delete[] grid;
-	}
-
-	gameModifiers = modifiers;
-
-	//Create grid
-	grid = new BlockCell * [modifiers.GridSize.y];
-	for (int y = 0; y < modifiers.GridSize.y; y++)
-	{
-		grid[y] = new BlockCell[modifiers.GridSize.x];
-
-		for (int x = 0; x < modifiers.GridSize.x; x++)
-		{
-			grid[y][x] = BlockCell(BLOCK_EMPTY, raylib::Color::Blank());
-		}
-	}
-
-	upAndComingPieces.clear();
-	upAndComingPieces.resize(modifiers.NumUpAndComingPieces);
-}
-
 void SceneGame::StartGame()
 {
 	
@@ -119,15 +93,19 @@ void SceneGame::StartGame()
 
 	//pieces
 	holdingPiece = Piece(0); //no piece
-	for (int i = 0; i < gameModifiers.NumUpAndComingPieces; i++)
+
+	upAndComingPieces.clear();
+	upAndComingPieces.resize(gameOptions.NumUpAndComingPieces);
+
+	for (int i = 0; i < gameOptions.NumUpAndComingPieces; i++)
 		upAndComingPieces[i] = GetRandomPieceFromBag();
 
 	NextPiece();
 
 	//Clear grid
-	for (int y = 0; y < gameModifiers.GridSize.y; y++)
+	for (int y = 0; y < gameOptions.GridSize.y; y++)
 	{
-		for (int x = 0; x < gameModifiers.GridSize.x; x++)
+		for (int x = 0; x < gameOptions.GridSize.x; x++)
 		{
 			grid[y][x] = BlockCell(BLOCK_EMPTY, raylib::Color::Blank());
 		}
@@ -314,11 +292,11 @@ void SceneGame::UpdatePieceGravity()
 void SceneGame::LineClearCheck()
 {
 	//check all lines
-	for (int y = 0; y < gameModifiers.GridSize.y; y++)
+	for (int y = 0; y < gameOptions.GridSize.y; y++)
 	{
 		bool isClear = true;
 
-		for (int x = 0; x < gameModifiers.GridSize.x; x++)
+		for (int x = 0; x < gameOptions.GridSize.x; x++)
 		{
 			if (grid[y][x].state != BLOCK_GRID)
 			{
@@ -330,7 +308,7 @@ void SceneGame::LineClearCheck()
 		if (isClear)
 		{
 			//start line clear animation for blocks
-			for (int x = 0; x < gameModifiers.GridSize.x; x++)
+			for (int x = 0; x < gameOptions.GridSize.x; x++)
 			{
 				grid[y][x].state = BLOCK_CLEARING;
 			}
@@ -419,13 +397,13 @@ void SceneGame::DrawGame()
 
 	//Grid size + Holding piece + Next pieces
 
-	float blockSize = std::min(maxFieldWidth / (gameModifiers.GridSize.x + UI_PIECE_LENGTH * 2), maxFieldHeight / std::max(gameModifiers.GridSize.y, UI_PIECE_LENGTH * gameModifiers.NumUpAndComingPieces + gameModifiers.NumUpAndComingPieces));
+	float blockSize = std::min(maxFieldWidth / (gameOptions.GridSize.x + UI_PIECE_LENGTH * 2), maxFieldHeight / std::max(gameOptions.GridSize.y, UI_PIECE_LENGTH * gameOptions.NumUpAndComingPieces + gameOptions.NumUpAndComingPieces));
 
-	Vector2 fieldSize = { blockSize * (gameModifiers.GridSize.x + UI_PIECE_LENGTH * 2), blockSize * gameModifiers.GridSize.y };
+	Vector2 fieldSize = { blockSize * (gameOptions.GridSize.x + UI_PIECE_LENGTH * 2), blockSize * gameOptions.GridSize.y };
 	float fieldX = ((float)screenWidth - fieldSize.x) / 2.0f;
 	float fieldY = ((float)screenHeight - fieldSize.y) / 2.0f;
 
-	Vector2 gridSize = { blockSize * gameModifiers.GridSize.x, blockSize * gameModifiers.GridSize.y };
+	Vector2 gridSize = { blockSize * gameOptions.GridSize.x, blockSize * gameOptions.GridSize.y };
 	float gridX = ((float)screenWidth - gridSize.x) / 2.0f;
 
 	//Grid background
@@ -441,7 +419,7 @@ void SceneGame::DrawGame()
 		std::string pausedText = "PAUSED";
 		float pausedTextFontSize = FitTextWidth(mainFont, pausedText, gridSize.x / 2.0f, BASE_FONT_SPACING);
 
-		if (!showStrobingLights || Wrap(gameWindow.GetTime(), 0.0f, 1.0f) <= 0.5f)
+		if (!gameOptions.EnableStrobingLights || Wrap(gameWindow.GetTime(), 0.0f, 0.5f) < 0.25f)
 			mainFont.DrawText(pausedText, raylib::Vector2(gridX + gridSize.x / 2.0f - gridSize.x / 4.0f, fieldY + gridSize.y / 2.0f - pausedTextFontSize / 2.0f), pausedTextFontSize, pausedTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
 	}
 
@@ -453,7 +431,7 @@ void SceneGame::DrawGame()
 		std::string gameOverText = "GAME OVER";
 		float gameOverTextFontSize = FitTextWidth(mainFont, gameOverText, gridSize.x / 1.5f, BASE_FONT_SPACING);
 
-		if (!showStrobingLights || Wrap(gameWindow.GetTime(), 0.0f, 1.0f) > 0.5f)
+		if (!gameOptions.EnableStrobingLights || Wrap(gameWindow.GetTime(), 0.0f, 0.5f) < 0.25f)
 			mainFont.DrawText(gameOverText, raylib::Vector2(gridX + gridSize.x / 2.0f - gridSize.x / 3.0f, fieldY + gridSize.y / 2.0f - gameOverTextFontSize / 2.0f), gameOverTextFontSize, gameOverTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
 
 		std::string retryText = "RETRY";
@@ -488,13 +466,13 @@ void SceneGame::DrawGame()
 	float nextTextFontSize = FitTextWidth(mainFont, nextText, (UI_PIECE_LENGTH - 1.0f) * blockSize, BASE_FONT_SPACING);
 	float nextTextWidth = mainFont.MeasureText(nextText, nextTextFontSize, nextTextFontSize * BASE_FONT_SPACING).x;
 
-	float nextHeight = blockSize * (UI_PIECE_LENGTH + 1) * gameModifiers.NumUpAndComingPieces - blockSize + nextTextFontSize;
+	float nextHeight = blockSize * (UI_PIECE_LENGTH + 1) * gameOptions.NumUpAndComingPieces - blockSize + nextTextFontSize;
 	gridBackgroundColor.DrawRectangle({ gridX + gridSize.x, fieldY, blockSize * UI_PIECE_LENGTH, nextHeight });
 
 	mainFont.DrawText(nextText, raylib::Vector2(gridX + gridSize.x + 0.5f * blockSize, fieldY), nextTextFontSize, nextTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
 
 	int nextPieceStartX = gridX + gridSize.x;
-	for (int pieceIndex = 0; pieceIndex < gameModifiers.NumUpAndComingPieces; pieceIndex++)
+	for (int pieceIndex = 0; pieceIndex < gameOptions.NumUpAndComingPieces; pieceIndex++)
 	{
 		int pieceStartY = fieldY + nextTextFontSize + ((UI_PIECE_LENGTH + 1) * blockSize) * (pieceIndex);
 
@@ -544,7 +522,7 @@ void SceneGame::DrawGame()
 	raylib::Color borderColor = raylib::Color::SkyBlue();
 	
 	if (gameOver)
-		borderColor = (Wrap(gameWindow.GetTime(), 0.0f, 1.0f) <= 0.5f || !showStrobingLights) ? raylib::Color::Red() : borderColor;
+		borderColor = (Wrap(gameWindow.GetTime(), 0.0f, 0.5f) < 0.25f || !gameOptions.EnableStrobingLights) ? raylib::Color::Red() : borderColor;
 	else if (isClearingLines)
 		borderColor = raylib::Color::Yellow();
 
@@ -620,13 +598,13 @@ void SceneGame::NextPiece()
 	currentPiece = upAndComingPieces[0];
 
 	//move up and coming pieces downwards
-	for (int i = 0; i < gameModifiers.NumUpAndComingPieces - 1; i++)
+	for (int i = 0; i < gameOptions.NumUpAndComingPieces - 1; i++)
 		upAndComingPieces[i] = upAndComingPieces[i + 1];
 
 	//fill last spot with random piece from bag
-	upAndComingPieces[gameModifiers.NumUpAndComingPieces - 1] = GetRandomPieceFromBag();
+	upAndComingPieces[gameOptions.NumUpAndComingPieces - 1] = GetRandomPieceFromBag();
 
-	currentPiecePosition = { gameModifiers.GridSize.x / 2 , 0 };
+	currentPiecePosition = { gameOptions.GridSize.x / 2 , 0 };
 
 	gravityPieceDeltaTime = 0.0f;
 
@@ -671,7 +649,7 @@ void SceneGame::HoldPiece()
 	else
 		currentPiece = tempPiece;
 
-	currentPiecePosition = { gameModifiers.GridSize.x / 2 , 0 };
+	currentPiecePosition = { gameOptions.GridSize.x / 2 , 0 };
 	gravityPieceDeltaTime = 0.0f;
 	hasSwitchedPiece = true;
 
@@ -700,13 +678,13 @@ void SceneGame::HardDropPiece()
 
 bool SceneGame::IsCellInBounds(int x, int y) const
 {
-	return x >= 0 && x < gameModifiers.GridSize.x && y >= 0 && y < gameModifiers.GridSize.y;
+	return x >= 0 && x < gameOptions.GridSize.x && y >= 0 && y < gameOptions.GridSize.y;
 }
 
 //Out of bounds cells do not count as empty and thus return false, unless this cell is above the grid but still within the left and right bounds.
 bool SceneGame::IsCellEmpty(int x, int y)
 {
-	if (x < 0 || x >= gameModifiers.GridSize.x || y >= gameModifiers.GridSize.y)
+	if (x < 0 || x >= gameOptions.GridSize.x || y >= gameOptions.GridSize.y)
 		return false;
 
 	if (y < 0)
@@ -715,19 +693,45 @@ bool SceneGame::IsCellEmpty(int x, int y)
 	return grid[y][x].state == BLOCK_EMPTY;
 }
 
+void SceneGame::SetGridSize(Vector2Int gridSize)
+{
+	//Delete old grid
+	if (grid != nullptr)
+	{
+		for (int y = 0; y < gameOptions.GridSize.y; y++)
+			delete[] grid[y];
+
+		delete[] grid;
+	}
+
+	gameOptions.GridSize = gridSize;
+
+	//Create grid
+	grid = new BlockCell * [gridSize.y];
+	for (int y = 0; y < gridSize.y; y++)
+	{
+		grid[y] = new BlockCell[gridSize.x];
+
+		for (int x = 0; x < gridSize.x; x++)
+		{
+			grid[y][x] = BlockCell(BLOCK_EMPTY, raylib::Color::Blank());
+		}
+	}
+}
+
 void SceneGame::ClearLine(int line)
 {
 	//shift everything downwards
 	for (int y = line; y > 0; y--)
 	{
-		for (int x = 0; x < gameModifiers.GridSize.x; x++)
+		for (int x = 0; x < gameOptions.GridSize.x; x++)
 		{
 			grid[y][x] = grid[y - 1][x];
 		}
 	}
 
 	//clear line 0
-	for (int x = 0; x < gameModifiers.GridSize.x; x++)
+	for (int x = 0; x < gameOptions.GridSize.x; x++)
 		grid[0][x].state = BLOCK_EMPTY;
 	
 	std::cout << "Cleared line " + std::to_string(line) << std::endl;
@@ -738,9 +742,9 @@ void SceneGame::DrawGrid(float posX, float posY, float blockSize, raylib::Textur
 	raylib::Rectangle blockTextureSource = { 0.0f, 0.0f, (float)blockTexture.width, (float)blockTexture.height };
 
 	//Draw grid cells
-	for (int gridY = 0; gridY < gameModifiers.GridSize.y; gridY++)
+	for (int gridY = 0; gridY < gameOptions.GridSize.y; gridY++)
 	{
-		for (int gridX = 0; gridX < gameModifiers.GridSize.x; gridX++)
+		for (int gridX = 0; gridX < gameOptions.GridSize.x; gridX++)
 		{
 			if (grid[gridY][gridX].state == BLOCK_EMPTY)
 				continue;
@@ -756,10 +760,10 @@ void SceneGame::DrawGrid(float posX, float posY, float blockSize, raylib::Textur
 					break;
 				case BLOCK_CLEARING:
 				{
-					const int FLASH_LENGTH = 6;
+					const int FLASH_LENGTH = std::min(6, gameOptions.GridSize.x);
 
-					float startFlashTime = (lineClearTimeSeconds - (lineClearTimeSeconds / gameModifiers.GridSize.x) * (FLASH_LENGTH - 2)) / gameModifiers.GridSize.x * (gridX);
-					float endFlashTime = (lineClearTimeSeconds - (lineClearTimeSeconds / gameModifiers.GridSize.x) * (FLASH_LENGTH - 2)) / gameModifiers.GridSize.x * (gridX + FLASH_LENGTH);
+					float startFlashTime = (lineClearTimeSeconds - (lineClearTimeSeconds / gameOptions.GridSize.x) * (FLASH_LENGTH - 2)) / gameOptions.GridSize.x * (gridX);
+					float endFlashTime = (lineClearTimeSeconds - (lineClearTimeSeconds / gameOptions.GridSize.x) * (FLASH_LENGTH - 2)) / gameOptions.GridSize.x * (gridX + FLASH_LENGTH);
 
 					if (deltaLineClearingTime < endFlashTime)
 						blockTexture.Draw(blockTextureSource, rect, { 0.0f, 0.0f }, 0.0f, deltaLineClearingTime >= startFlashTime ? raylib::Color::White() : blockColor);
@@ -785,7 +789,7 @@ void SceneGame::DrawGrid(float posX, float posY, float blockSize, raylib::Textur
 			blockTexture.Draw(blockTextureSource, rect, { 0.0f, 0.0f }, 0.0f, currentPiece.blockColors[i]);
 		}
 
-		if (gameModifiers.ShowPiecePreview && currentPiece.numBlocks != 0)
+		if (gameOptions.ShowGhostPiece && currentPiece.numBlocks != 0)
 		{
 			//Draw current piece preview
 			Vector2Int previewPosition = currentPiecePosition;
@@ -815,9 +819,9 @@ void SceneGame::DrawGrid(float posX, float posY, float blockSize, raylib::Textur
 void SceneGame::UpdateTitleMenu()
 {
 	if (IsKeyPressed(KEY_DOWN))
-		menuButtonIndex = Wrap(menuButtonIndex + 1, 0, 4);
+		menuButtonIndex = Wrap(menuButtonIndex + 1, 0, 5);
 	else if (IsKeyPressed(KEY_UP))
-		menuButtonIndex = Wrap(menuButtonIndex - 1, 0, 4);
+		menuButtonIndex = Wrap(menuButtonIndex - 1, 0, 5);
 
 	switch (menuButtonIndex)
 	{
@@ -834,6 +838,7 @@ void SceneGame::UpdateTitleMenu()
 			if (IsKeyPressed(KEY_SPACE))
 			{
 				menuState = MENU_OPTIONS;
+				menuButtonIndex = 0;
 			}
 			break;
 		//controls button
@@ -841,10 +846,19 @@ void SceneGame::UpdateTitleMenu()
 			if (IsKeyPressed(KEY_SPACE))
 			{
 				menuState = MENU_CONTROLS;
+				menuButtonIndex = 0;
+			}
+			break;
+		//credits button
+		case 3:
+			if (IsKeyPressed(KEY_SPACE))
+			{
+				menuState = MENU_CREDITS;
+				menuButtonIndex = 0;
 			}
 			break;
 		//quit button
-		case 3:
+		case 4:
 			if (IsKeyPressed(KEY_SPACE))
 			{
 				//TODO: currently actually crashes the game, fix
@@ -856,12 +870,100 @@ void SceneGame::UpdateTitleMenu()
 
 void SceneGame::UpdateOptionsMenu()
 {
+	if (IsKeyPressed(KEY_DOWN))
+		menuButtonIndex = Wrap(menuButtonIndex + 1, 0, 5);
+	else if (IsKeyPressed(KEY_UP))
+		menuButtonIndex = Wrap(menuButtonIndex - 1, 0, 5);
 
+	switch (menuButtonIndex)
+	{
+		//strobing lights option
+		case 0:
+			if (IsKeyPressed(KEY_SPACE))
+			{
+				gameOptions.EnableStrobingLights = !gameOptions.EnableStrobingLights;
+			}
+			break;
+		//grid width option
+		case 1:
+		{
+			const int MAX_GRID_WIDTH = 30;
+			const int MIN_GRID_WIDTH = 3;
+
+			if (IsKeyPressed(KEY_SPACE) || IsKeyPressed(KEY_RIGHT))
+			{
+				if (gameOptions.GridSize.x + 1 > MAX_GRID_WIDTH)
+					SetGridSize(Vector2Int{ MIN_GRID_WIDTH, gameOptions.GridSize.y });
+				else
+					SetGridSize(Vector2Int{ gameOptions.GridSize.x + 1, gameOptions.GridSize.y });
+			}
+			else if (IsKeyPressed(KEY_LEFT))
+			{
+				if (gameOptions.GridSize.x - 1 < MIN_GRID_WIDTH)
+					SetGridSize(Vector2Int{ MAX_GRID_WIDTH, gameOptions.GridSize.y });
+				else
+					SetGridSize(Vector2Int{ gameOptions.GridSize.x - 1, gameOptions.GridSize.y });
+			}
+
+			break;
+		}
+		//grid height option
+		case 2:
+		{
+			const int MAX_GRID_HEIGHT = 60;
+			const int MIN_GRID_HEIGHT = 16;
+
+			if (IsKeyPressed(KEY_SPACE) || IsKeyPressed(KEY_RIGHT))
+			{
+				if (gameOptions.GridSize.y + 1 > MAX_GRID_HEIGHT)
+					SetGridSize(Vector2Int{ gameOptions.GridSize.x, MIN_GRID_HEIGHT });
+				else
+					SetGridSize(Vector2Int{ gameOptions.GridSize.x, gameOptions.GridSize.y + 1 });
+			}
+			else if (IsKeyPressed(KEY_LEFT))
+			{
+				if (gameOptions.GridSize.y - 1 < MIN_GRID_HEIGHT)
+					SetGridSize(Vector2Int{ gameOptions.GridSize.x, MAX_GRID_HEIGHT });
+				else
+					SetGridSize(Vector2Int{ gameOptions.GridSize.x, gameOptions.GridSize.y - 1 });
+			}
+
+			break;
+		}
+		//ghost piece option
+		case 3:
+			if (IsKeyPressed(KEY_SPACE))
+			{
+				gameOptions.ShowGhostPiece = !gameOptions.ShowGhostPiece;
+			}
+			break;
+		//back button
+		case 4:
+			if (IsKeyPressed(KEY_SPACE))
+			{
+				menuState = MENU_TITLE;
+				menuButtonIndex = 1;
+			}
+			break;
+	}
 }
 
 void SceneGame::UpdateControlsMenu()
 {
+	if (IsKeyPressed(KEY_SPACE))
+	{
+		menuState = MENU_TITLE;
+		menuButtonIndex = 2;
+	}
+}
 
+void SceneGame::UpdateCreditsMenu()
+{
+	if (IsKeyPressed(KEY_SPACE))
+	{
+		menuState = MENU_TITLE;
+		menuButtonIndex = 3;
+	}
 }
 
 void SceneGame::DrawTitleMenu() 
@@ -874,11 +976,11 @@ void SceneGame::DrawTitleMenu()
 	raylib::Font& mainFont = GetFont("MainFont");
 
 	//Background
-	raylib::Color backgroundColor = raylib::Color::Black().Alpha(0.4f);
+	raylib::Color backgroundColor = raylib::Color::Black().Alpha(0.6f);
 	backgroundColor.DrawRectangle(0, 0, screenWidth, screenHeight);
 
 	//Icon
-	float iconScale = 1.0f * aspectScale;
+	float iconScale = (1.0f + (sinf(gameWindow.GetTime())) * 0.05f) * aspectScale;
 	raylib::Texture2D& iconTexture = GetTexture("Icon");
 	raylib::Rectangle iconSourceRect = raylib::Rectangle{ 0, 0, (float)iconTexture.width, (float)iconTexture.height };
 	iconTexture.Draw(iconSourceRect, raylib::Rectangle{ screenWidth / 2.0f, screenHeight / 2.0f - (float)iconTexture.height * iconScale, (float)iconTexture.width * iconScale, (float)iconTexture.height * iconScale }, { (float)iconTexture.width / 2.0f * iconScale, (float)iconTexture.height / 2.0f * iconScale }, 0.0f, raylib::Color::White());
@@ -900,7 +1002,7 @@ void SceneGame::DrawTitleMenu()
 	}
 
 	//Buttons
-	float buttonTextSize = 64 * aspectScale;
+	float buttonTextSize = 52 * aspectScale;
 
 	std::string startText = "START";
 	float startWidth = mainFont.MeasureText(startText, buttonTextSize, buttonTextSize * BASE_FONT_SPACING).x;
@@ -912,21 +1014,173 @@ void SceneGame::DrawTitleMenu()
 
 	std::string controlsText = "CONTROLS";
 	float controlsWidth = mainFont.MeasureText(controlsText, buttonTextSize, buttonTextSize * BASE_FONT_SPACING).x;
-	mainFont.DrawText(controlsText, raylib::Vector2(screenWidth / 2.0f - optionsWidth / 2.0f, screenHeight / 2.0f + buttonTextSize * 2 - buttonTextSize / 2.0f), buttonTextSize, buttonTextSize * BASE_FONT_SPACING, menuButtonIndex == 2 ? raylib::Color::Yellow() : raylib::Color::White());
+	mainFont.DrawText(controlsText, raylib::Vector2(screenWidth / 2.0f - controlsWidth / 2.0f, screenHeight / 2.0f + buttonTextSize * 2 - buttonTextSize / 2.0f), buttonTextSize, buttonTextSize * BASE_FONT_SPACING, menuButtonIndex == 2 ? raylib::Color::Yellow() : raylib::Color::White());
+
+	std::string creditsText = "CREDITS";
+	float creditsWidth = mainFont.MeasureText(creditsText, buttonTextSize, buttonTextSize * BASE_FONT_SPACING).x;
+	mainFont.DrawText(creditsText, raylib::Vector2(screenWidth / 2.0f - creditsWidth / 2.0f, screenHeight / 2.0f + buttonTextSize * 3 - buttonTextSize / 2.0f), buttonTextSize, buttonTextSize * BASE_FONT_SPACING, menuButtonIndex == 3 ? raylib::Color::Yellow() : raylib::Color::White());
 
 	std::string quitText = "QUIT";
 	float quitWidth = mainFont.MeasureText(quitText, buttonTextSize, buttonTextSize * BASE_FONT_SPACING).x;
-	mainFont.DrawText(quitText, raylib::Vector2(screenWidth / 2.0f - quitWidth / 2.0f, screenHeight / 2.0f + buttonTextSize * 3 - buttonTextSize / 2.0f), buttonTextSize, buttonTextSize * BASE_FONT_SPACING, menuButtonIndex == 3 ? raylib::Color::Yellow() : raylib::Color::White());
+	mainFont.DrawText(quitText, raylib::Vector2(screenWidth / 2.0f - quitWidth / 2.0f, screenHeight / 2.0f + buttonTextSize * 4 - buttonTextSize / 2.0f), buttonTextSize, buttonTextSize * BASE_FONT_SPACING, menuButtonIndex == 4 ? raylib::Color::Yellow() : raylib::Color::White());
 }
 
 void SceneGame::DrawOptionsMenu()
 {
+	int screenWidth = gameWindow.GetWidth();
+	int screenHeight = gameWindow.GetHeight();
 
+	float aspectScale = std::min((float)screenWidth / DESIGN_WIDTH, (float)screenHeight / DESIGN_HEIGHT);
+
+	raylib::Font& mainFont = GetFont("MainFont");
+
+	//Background
+	raylib::Color backgroundColor = raylib::Color::Black().Alpha(0.6f);
+	backgroundColor.DrawRectangle(0, 0, screenWidth, screenHeight);
+
+	//Icon
+	float iconScale = (1.0f + (sinf(gameWindow.GetTime())) * 0.05f) * aspectScale;
+	raylib::Texture2D& iconTexture = GetTexture("Icon");
+	raylib::Rectangle iconSourceRect = raylib::Rectangle{ 0, 0, (float)iconTexture.width, (float)iconTexture.height };
+	iconTexture.Draw(iconSourceRect, raylib::Rectangle{ screenWidth / 2.0f, screenHeight / 2.0f - (float)iconTexture.height * iconScale, (float)iconTexture.width * iconScale, (float)iconTexture.height * iconScale }, { (float)iconTexture.width / 2.0f * iconScale, (float)iconTexture.height / 2.0f * iconScale }, 0.0f, raylib::Color::White());
+
+	//Options title
+	std::string titleText = "OPTIONS";
+	float titleTextSize = 80 * aspectScale;
+	float titleWidth = mainFont.MeasureText(titleText, titleTextSize, titleTextSize * BASE_FONT_SPACING).x;
+	float titleTextX = (screenWidth - titleWidth) / 2.0f;
+
+	for (int i = 0; i < titleText.length(); i++)
+	{
+		std::string titleChar = std::string(1, titleText.at(i));
+
+		mainFont.DrawText(std::string(1, titleText.at(i)), raylib::Vector2(titleTextX, screenHeight / 2.0f - (float)iconTexture.height * iconScale * 1.5f - titleTextSize + sinf(gameWindow.GetTime() * 3.0f + i) * 4.0f * aspectScale), titleTextSize, titleTextSize * BASE_FONT_SPACING, raylib::Color::FromHSV(Wrap(gameWindow.GetTime() * 120.0f + 30.0f * i, 0.0f, 360.0f), 1.0f, 1.0f));
+
+		int titleCharWidth = raylib::MeasureText(titleChar, titleTextSize);
+		titleTextX += titleCharWidth + (titleTextSize / 10);
+	}
+
+	//Options
+	float optionTextSize = 40 * aspectScale;
+
+	//Strobing lights
+	std::string strobingLightsText = "STROBING LIGHTS: ";
+	strobingLightsText += gameOptions.EnableStrobingLights ? "ON" : "OFF";
+
+	float strobingLightsWidth = mainFont.MeasureText(strobingLightsText, optionTextSize, optionTextSize * BASE_FONT_SPACING).x;
+	mainFont.DrawText(strobingLightsText, raylib::Vector2(screenWidth / 2.0f - strobingLightsWidth / 2.0f, screenHeight / 2.0f - optionTextSize / 2.0f), optionTextSize, optionTextSize * BASE_FONT_SPACING, menuButtonIndex == 0 ? raylib::Color::Yellow() : raylib::Color::White());
+
+	//Width
+	std::string widthText = std::format("WIDTH: < {:0} >", gameOptions.GridSize.x);
+
+	float widthTextWidth = mainFont.MeasureText(widthText, optionTextSize, optionTextSize * BASE_FONT_SPACING).x;
+	mainFont.DrawText(widthText, raylib::Vector2(screenWidth / 2.0f - widthTextWidth / 2.0f, screenHeight / 2.0f + optionTextSize - optionTextSize / 2.0f), optionTextSize, optionTextSize * BASE_FONT_SPACING, menuButtonIndex == 1 ? raylib::Color::Yellow() : raylib::Color::White());
+
+	//Height
+	std::string heightText = std::format("HEIGHT: < {:0} >", gameOptions.GridSize.y);
+
+	float heightTextWidth = mainFont.MeasureText(heightText, optionTextSize, optionTextSize * BASE_FONT_SPACING).x;
+	mainFont.DrawText(heightText, raylib::Vector2(screenWidth / 2.0f - heightTextWidth / 2.0f, screenHeight / 2.0f + optionTextSize * 2 - optionTextSize / 2.0f), optionTextSize, optionTextSize * BASE_FONT_SPACING, menuButtonIndex == 2 ? raylib::Color::Yellow() : raylib::Color::White());
+
+	//Show ghost piece
+	std::string ghostPieceText = "GHOST PIECE: ";
+	ghostPieceText += gameOptions.ShowGhostPiece ? "ON" : "OFF";
+
+	float ghostPieceTextWidth = mainFont.MeasureText(ghostPieceText, optionTextSize, optionTextSize * BASE_FONT_SPACING).x;
+	mainFont.DrawText(ghostPieceText, raylib::Vector2(screenWidth / 2.0f - ghostPieceTextWidth / 2.0f, screenHeight / 2.0f + optionTextSize * 3 - optionTextSize / 2.0f), optionTextSize, optionTextSize * BASE_FONT_SPACING, menuButtonIndex == 3 ? raylib::Color::Yellow() : raylib::Color::White());
+
+	//Buttons
+	float buttonTextSize = 52 * aspectScale;
+
+	std::string backText = "BACK";
+	float backWidth = mainFont.MeasureText(backText, buttonTextSize, buttonTextSize * BASE_FONT_SPACING).x;
+	mainFont.DrawText(backText, raylib::Vector2(screenWidth / 2.0f - backWidth / 2.0f, screenHeight / 2.0f + buttonTextSize * 4 - buttonTextSize / 2.0f), buttonTextSize, buttonTextSize * BASE_FONT_SPACING, menuButtonIndex == 4 ? raylib::Color::Yellow() : raylib::Color::White());
 }
 
 void SceneGame::DrawControlsMenu()
 {
+	int screenWidth = gameWindow.GetWidth();
+	int screenHeight = gameWindow.GetHeight();
 
+	float aspectScale = std::min((float)screenWidth / DESIGN_WIDTH, (float)screenHeight / DESIGN_HEIGHT);
+
+	raylib::Font& mainFont = GetFont("MainFont");
+
+	//Background
+	raylib::Color backgroundColor = raylib::Color::Black().Alpha(0.6f);
+	backgroundColor.DrawRectangle(0, 0, screenWidth, screenHeight);
+
+	//Icon
+	float iconScale = (1.0f + (sinf(gameWindow.GetTime())) * 0.05f) * aspectScale;
+	raylib::Texture2D& iconTexture = GetTexture("Icon");
+	raylib::Rectangle iconSourceRect = raylib::Rectangle{ 0, 0, (float)iconTexture.width, (float)iconTexture.height };
+	iconTexture.Draw(iconSourceRect, raylib::Rectangle{ screenWidth / 2.0f, screenHeight / 2.0f - (float)iconTexture.height * iconScale, (float)iconTexture.width * iconScale, (float)iconTexture.height * iconScale }, { (float)iconTexture.width / 2.0f * iconScale, (float)iconTexture.height / 2.0f * iconScale }, 0.0f, raylib::Color::White());
+
+	//controls title
+	std::string titleText = "CONTROLS";
+	float titleTextSize = 80 * aspectScale;
+	float titleWidth = mainFont.MeasureText(titleText, titleTextSize, titleTextSize * BASE_FONT_SPACING).x;
+	float titleTextX = (screenWidth - titleWidth) / 2.0f;
+
+	for (int i = 0; i < titleText.length(); i++)
+	{
+		std::string titleChar = std::string(1, titleText.at(i));
+
+		mainFont.DrawText(std::string(1, titleText.at(i)), raylib::Vector2(titleTextX, screenHeight / 2.0f - (float)iconTexture.height * iconScale * 1.5f - titleTextSize + sinf(gameWindow.GetTime() * 3.0f + i) * 4.0f * aspectScale), titleTextSize, titleTextSize * BASE_FONT_SPACING, raylib::Color::FromHSV(Wrap(gameWindow.GetTime() * 120.0f + 30.0f * i, 0.0f, 360.0f), 1.0f, 1.0f));
+
+		int titleCharWidth = raylib::MeasureText(titleChar, titleTextSize);
+		titleTextX += titleCharWidth + (titleTextSize / 10);
+	}
+
+	//Buttons
+	float buttonTextSize = 52 * aspectScale;
+
+	std::string backText = "BACK";
+	float backWidth = mainFont.MeasureText(backText, buttonTextSize, buttonTextSize * BASE_FONT_SPACING).x;
+	mainFont.DrawText(backText, raylib::Vector2(screenWidth / 2.0f - backWidth / 2.0f, screenHeight / 2.0f + buttonTextSize * 4 - buttonTextSize / 2.0f), buttonTextSize, buttonTextSize * BASE_FONT_SPACING, menuButtonIndex == 0 ? raylib::Color::Yellow() : raylib::Color::White());
+}
+
+void SceneGame::DrawCreditsMenu()
+{
+	int screenWidth = gameWindow.GetWidth();
+	int screenHeight = gameWindow.GetHeight();
+
+	float aspectScale = std::min((float)screenWidth / DESIGN_WIDTH, (float)screenHeight / DESIGN_HEIGHT);
+
+	raylib::Font& mainFont = GetFont("MainFont");
+
+	//Background
+	raylib::Color backgroundColor = raylib::Color::Black().Alpha(0.6f);
+	backgroundColor.DrawRectangle(0, 0, screenWidth, screenHeight);
+
+	//Icon
+	float iconScale = (1.0f + (sinf(gameWindow.GetTime())) * 0.05f) * aspectScale;
+	raylib::Texture2D& iconTexture = GetTexture("Icon");
+	raylib::Rectangle iconSourceRect = raylib::Rectangle{ 0, 0, (float)iconTexture.width, (float)iconTexture.height };
+	iconTexture.Draw(iconSourceRect, raylib::Rectangle{ screenWidth / 2.0f, screenHeight / 2.0f - (float)iconTexture.height * iconScale, (float)iconTexture.width * iconScale, (float)iconTexture.height * iconScale }, { (float)iconTexture.width / 2.0f * iconScale, (float)iconTexture.height / 2.0f * iconScale }, 0.0f, raylib::Color::White());
+
+	//credits title
+	std::string titleText = "CREDITS";
+	float titleTextSize = 80 * aspectScale;
+	float titleWidth = mainFont.MeasureText(titleText, titleTextSize, titleTextSize * BASE_FONT_SPACING).x;
+	float titleTextX = (screenWidth - titleWidth) / 2.0f;
+
+	for (int i = 0; i < titleText.length(); i++)
+	{
+		std::string titleChar = std::string(1, titleText.at(i));
+
+		mainFont.DrawText(std::string(1, titleText.at(i)), raylib::Vector2(titleTextX, screenHeight / 2.0f - (float)iconTexture.height * iconScale * 1.5f - titleTextSize + sinf(gameWindow.GetTime() * 3.0f + i) * 4.0f * aspectScale), titleTextSize, titleTextSize * BASE_FONT_SPACING, raylib::Color::FromHSV(Wrap(gameWindow.GetTime() * 120.0f + 30.0f * i, 0.0f, 360.0f), 1.0f, 1.0f));
+
+		int titleCharWidth = raylib::MeasureText(titleChar, titleTextSize);
+		titleTextX += titleCharWidth + (titleTextSize / 10);
+	}
+
+	//Buttons
+	float buttonTextSize = 52 * aspectScale;
+
+	std::string backText = "BACK";
+	float backWidth = mainFont.MeasureText(backText, buttonTextSize, buttonTextSize * BASE_FONT_SPACING).x;
+	mainFont.DrawText(backText, raylib::Vector2(screenWidth / 2.0f - backWidth / 2.0f, screenHeight / 2.0f + buttonTextSize * 4 - buttonTextSize / 2.0f), buttonTextSize, buttonTextSize * BASE_FONT_SPACING, menuButtonIndex == 0 ? raylib::Color::Yellow() : raylib::Color::White());
 }
 #pragma endregion
 
@@ -946,6 +1200,9 @@ void SceneGame::Draw()
 		case MENU_CONTROLS:
 			DrawControlsMenu();
 			break;
+		case MENU_CREDITS:
+			DrawCreditsMenu();
+			break;
 		default:
 			break;
 	}
@@ -958,7 +1215,7 @@ void SceneGame::Destroy()
 {
 	//Destroy grid
 
-	for (int y = 0; y < gameModifiers.GridSize.y; y++)
+	for (int y = 0; y < gameOptions.GridSize.y; y++)
 		delete[] grid[y];
 
 	delete[] grid;

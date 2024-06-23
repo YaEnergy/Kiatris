@@ -4,7 +4,7 @@
 #include "Scene.h"
 #include "Game/BlockCell.h"
 #include "Game/Piece.h"
-#include "Game/GameModifiers.h"
+#include "Game/GameOptions.h"
 #include <iostream>
 
 enum MenuState
@@ -12,6 +12,7 @@ enum MenuState
 	MENU_TITLE,
 	MENU_CONTROLS,
 	MENU_OPTIONS,
+	MENU_CREDITS,
 	MENU_NONE
 };
 
@@ -20,8 +21,7 @@ class SceneGame : public Scene
 	private:
 		raylib::Window& gameWindow;
 
-		GameModifiers gameModifiers;
-		bool showStrobingLights = true;
+		GameOptions gameOptions;
 
 		Piece currentPiece;
 		Vector2Int currentPiecePosition = { 0, 0 };
@@ -54,7 +54,6 @@ class SceneGame : public Scene
 		float timePlayingSeconds = 0;
 
 		//Gameplay
-		void SetGameModifiers(GameModifiers modifiers);
 		void StartGame();
 		void UpdateGameplay();
 		void UpdatePieceMovement();
@@ -70,11 +69,12 @@ class SceneGame : public Scene
 		void UpdateTitleMenu();
 		void UpdateOptionsMenu();
 		void UpdateControlsMenu();
+		void UpdateCreditsMenu();
 		
 		void DrawTitleMenu();
 		void DrawOptionsMenu();
 		void DrawControlsMenu();
-		void DrawPauseMenu();
+		void DrawCreditsMenu();
 
 		//Pieces
 
@@ -90,15 +90,24 @@ class SceneGame : public Scene
 		void HardDropPiece();
 
 		//Grid
+
 		bool IsCellInBounds(int x, int y) const;
 		bool IsCellEmpty(int x, int y); 
+
 		void ClearLine(int line);
+		void SetGridSize(Vector2Int size);
 		void DrawGrid(float x, float y, float blockSize, raylib::Texture2D& blockTexture);
 
 	public:
-		SceneGame(raylib::Window& window, GameModifiers modifiers) : gameWindow(window)
+		SceneGame(raylib::Window& window, GameOptions options) : gameWindow(window)
 		{
-			SetGameModifiers(modifiers);
+
+			gameOptions = options;
+
+			upAndComingPieces.clear();
+			upAndComingPieces.resize(gameOptions.NumUpAndComingPieces);
+
+			SetGridSize(options.GridSize);
 		}
 
 		void Init();

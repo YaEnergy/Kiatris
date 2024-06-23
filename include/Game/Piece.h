@@ -32,7 +32,7 @@ struct Piece
 
 	Piece()
 	{
-		pivotOffset = { 0, 0 };
+		pivotOffset = { 0.0f, 0.0f };
 		blockOffsets = std::vector<Vector2Int>(0);;
 		blockColors = std::vector<raylib::Color>(0);
 		numBlocks = 0;
@@ -48,7 +48,7 @@ struct Piece
 
 	Piece(int numBlocks)
 	{
-		pivotOffset = { 0, 0 };
+		pivotOffset = { 0.0f, 0.0f };
 		blockOffsets = std::vector<Vector2Int>(numBlocks);;
 		blockColors = std::vector<raylib::Color>(numBlocks);
 		this->numBlocks = numBlocks;
