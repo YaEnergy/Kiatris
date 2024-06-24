@@ -51,7 +51,7 @@ class SceneGame : public Scene
 
 		//statistics
 		int score = 0;
-		int level = 0;
+		int level = 1;
 		int totalLinesCleared = 0;
 		float timePlayingSeconds = 0;
 

@@ -22,6 +22,17 @@ void SceneGame::Init()
 
 void SceneGame::Update()
 {
+	//Menu theme
+	if (menuState != MENU_NONE)
+	{
+		raylib::Music& menuTheme = GetMusic("MenuTheme");
+
+		if (!menuTheme.IsPlaying())
+			menuTheme.Play();
+
+		menuTheme.Update();
+	}
+
 	switch (menuState)
 	{
 		case MENU_TITLE:
@@ -111,7 +122,7 @@ void SceneGame::StartGame()
 		}
 	}
 
-	//restart music
+	//restart main theme
 	raylib::Music& mainTheme = GetMusic("MainTheme");
 	mainTheme.Seek(0.0f);
 }
@@ -364,6 +375,10 @@ void SceneGame::ReturnToMenu()
 	gamePaused = false;
 	menuState = MENU_TITLE;
 	menuButtonIndex = 0;
+
+	//restart menu theme
+	raylib::Music& menuTheme = GetMusic("MenuTheme");
+	menuTheme.Seek(0.0f);
 }
 
 void SceneGame::DrawGame()
@@ -378,13 +393,15 @@ void SceneGame::DrawGame()
 
 	raylib::Font& mainFont = GetFont("MainFont");
 
-	raylib::Color gridBackgroundColor = raylib::Color::Black().Alpha(0.4f);
+	raylib::Color mainColor = raylib::Color::FromHSV(45.0f * (level - 1) + sinf(gameWindow.GetTime()) * 5.0f + 211.0f, 1.0f, 1.0f);
+
+	raylib::Color gridBackgroundColor = raylib::Color::Black().Alpha(0.6f);
 
 	raylib::Texture2D& blockTexture = GetTexture("BlockPiece");
 	raylib::Rectangle blockTextureSource = { 0.0f, 0.0f, (float)blockTexture.width, (float)blockTexture.height };
 
 	//Background
-	blockTexture.Draw(raylib::Rectangle(Wrap(windowTime, 0.0f, 1.0f) * (float)blockTexture.width, Wrap(windowTime, 0.0f, 1.0f) * (float)blockTexture.height, (float)screenWidth / 1.5f, (float)screenHeight / 1.5f), { 0, 0, (float)screenWidth, (float)screenHeight }, { 0, 0 }, 0.0f, raylib::Color::DarkBlue());
+	blockTexture.Draw(raylib::Rectangle(Wrap(windowTime, 0.0f, 1.0f) * (float)blockTexture.width, Wrap(windowTime, 0.0f, 1.0f) * (float)blockTexture.height, (float)screenWidth / 1.5f, (float)screenHeight / 1.5f), { 0, 0, (float)screenWidth, (float)screenHeight }, { 0, 0 }, 0.0f, mainColor.Brightness(0.2f));
 
 	//Field
 
@@ -451,14 +468,14 @@ void SceneGame::DrawGame()
 	float holdHeight = blockSize * UI_PIECE_LENGTH + holdTextFontSize;
 	gridBackgroundColor.DrawRectangle({ fieldX, fieldY, blockSize * UI_PIECE_LENGTH, holdHeight });
 
-	mainFont.DrawText(holdText, raylib::Vector2(gridX - (UI_PIECE_LENGTH - 0.5f) * blockSize, fieldY), holdTextFontSize, holdTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
+	mainFont.DrawText(holdText, raylib::Vector2(gridX - (UI_PIECE_LENGTH - 0.5f) * blockSize, fieldY), holdTextFontSize, holdTextFontSize * BASE_FONT_SPACING, hasSwitchedPiece ? raylib::Color::Red() : raylib::Color::White());
 
 	float holdPieceStartX = gridX - 4 * blockSize;
 	for (int i = 0; i < holdingPiece.numBlocks; i++)
 	{
 		raylib::Rectangle rect = { holdPieceStartX + blockSize * (holdingPiece.blockOffsets[i].x + 1), fieldY + holdTextFontSize + blockSize * (holdingPiece.blockOffsets[i].y + 1), blockSize, blockSize };
 
-		blockTexture.Draw(blockTextureSource, rect, { 0.0f, 0.0f }, 0.0f, holdingPiece.blockColors[i]);
+		blockTexture.Draw(blockTextureSource, rect, { 0.0f, 0.0f }, 0.0f, hasSwitchedPiece ? holdingPiece.blockColors[i].Alpha(0.5f) : holdingPiece.blockColors[i]);
 	}
 
 	//up and coming pieces
@@ -519,12 +536,12 @@ void SceneGame::DrawGame()
 	mainFont.DrawText(timeValText, raylib::Vector2(fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize * 7 + statPanelHeightPadding), statTextFontSize, statTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
 
 	//Borders
-	raylib::Color borderColor = raylib::Color::SkyBlue();
+	raylib::Color borderColor = raylib::Color::FromHSV(45.0f * (level - 1) + sinf(gameWindow.GetTime()) * 5.0f + 221.0f, 1.0f, 1.0f);;
 	
 	if (gameOver)
 		borderColor = (Wrap(gameWindow.GetTime(), 0.0f, 0.5f) < 0.25f || !gameOptions.EnableStrobingLights) ? raylib::Color::Red() : borderColor;
 	else if (isClearingLines)
-		borderColor = raylib::Color::Yellow();
+		borderColor = raylib::Color(255 - borderColor.r, 255 - borderColor.g, 255 - borderColor.b, borderColor.a);
 
 	float borderThickness = 6.0f * std::min((float)fieldSize.x / DESIGN_WIDTH, (float)fieldSize.y / DESIGN_HEIGHT);
 

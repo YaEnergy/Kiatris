@@ -19,11 +19,16 @@ void LoadAssets()
 	sounds.emplace("LineClear", raylib::Sound("assets/sfx/line_clear.wav"));
 
 	//music
-	musicFiles.emplace("MainTheme", raylib::Music("assets/music/Space 1990.mp3"));
+	musicFiles.emplace("MainTheme", raylib::Music("assets/music/Nowhere Land.mp3"));
+	musicFiles.emplace("MenuTheme", raylib::Music("assets/music/Bleeping Demo.mp3"));
 
 	raylib::Music& mainTheme = GetMusic("MainTheme");
 	mainTheme.SetLooping(true);
 	mainTheme.SetVolume(0.2f);
+
+	raylib::Music& menuTheme = GetMusic("MenuTheme");
+	menuTheme.SetLooping(true);
+	menuTheme.SetVolume(0.2f);
 
 	//fonts
 	fonts.emplace("MainFont", raylib::Font());
