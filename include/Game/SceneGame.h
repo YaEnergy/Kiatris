@@ -18,6 +18,8 @@ enum MenuState
 
 class SceneGame : public Scene
 {
+	public:
+		bool WantsToQuit = false;
 	private:
 		raylib::Window& gameWindow;
 

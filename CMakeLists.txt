@@ -58,7 +58,7 @@ set(
 	"source/Kiatris.cpp"
     "source/Game/Piece.cpp" 
     "source/Game/SceneGame.cpp"
-    "source/Game/SceneManager.cpp"
+    
  "source/Assets.cpp" )
 
 set(

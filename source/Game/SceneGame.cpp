@@ -861,8 +861,7 @@ void SceneGame::UpdateTitleMenu()
 		case 4:
 			if (IsKeyPressed(KEY_SPACE))
 			{
-				//TODO: currently actually crashes the game, fix
-				gameWindow.Close();
+				WantsToQuit = true;
 			}
 			break;
 	}

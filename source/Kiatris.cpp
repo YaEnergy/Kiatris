@@ -4,7 +4,6 @@
 #include "Kiatris.h"
 #include "Assets.h"
 #include "raylib-cpp.hpp"
-#include "Game/SceneManager.h"
 #include "Game/SceneGame.h"
 
 class Game
@@ -12,29 +11,26 @@ class Game
 	private:
 		raylib::Window window;
 		raylib::AudioDevice audioDevice;
-		SceneManager sceneManager;
+		SceneGame sceneGame;
 
 		void UpdateDrawFrame()
 		{
-			sceneManager.Update();
+			sceneGame.Update();
 
 			window.BeginDrawing();
 
 			window.ClearBackground(raylib::BLACK);
 
-			sceneManager.Draw();
+			sceneGame.Draw();
 			window.DrawFPS(10, 10);
 
 			window.EndDrawing();
 		}
 	public:
-		Game() : window(DESIGN_WIDTH, DESIGN_HEIGHT, "Kiatris", FLAG_VSYNC_HINT), audioDevice()
+		Game() : window(DESIGN_WIDTH, DESIGN_HEIGHT, "Kiatris", FLAG_VSYNC_HINT), audioDevice(), sceneGame(window, GameOptions{ 3, Vector2Int{10, 20}, true, true })
 		{
 			raylib::Image icon = raylib::Image("assets/textures/kiatrisicon.png");
 			window.SetIcon(icon);
-
-			SceneGame gameScene(window, GameOptions{ 3, Vector2Int{10, 20}, true, true});
-			sceneManager.SetScene(&gameScene);
 			
 			window.SetState(FLAG_WINDOW_RESIZABLE);
 			
@@ -59,7 +55,7 @@ class Game
 
 			//TODO: loading assets, flags, init, Emscripten modifications, audio device
 
-			while (!window.ShouldClose())
+			while (!window.ShouldClose() && !sceneGame.WantsToQuit)
 			{
 				if (GetCurrentMonitor() != monitor)
 				{
