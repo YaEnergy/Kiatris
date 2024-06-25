@@ -993,10 +993,42 @@ void SceneGame::UpdateControlsMenu()
 
 void SceneGame::UpdateCreditsMenu()
 {
-	if (IsKeyPressed(KEY_SPACE))
+	if (IsKeyPressed(KEY_DOWN))
+		menuButtonIndex = Wrap(menuButtonIndex + 1, 0, 4);
+	else if (IsKeyPressed(KEY_UP))
+		menuButtonIndex = Wrap(menuButtonIndex - 1, 0, 4);
+
+	switch (menuButtonIndex)
 	{
-		menuState = MENU_TITLE;
-		menuButtonIndex = 3;
+		//yt link
+		case 0:
+			if (IsKeyPressed(KEY_SPACE))
+			{
+				raylib::OpenURL("https://www.youtube.com/channel/UCVjBKRRHM1u8FYEnmt6JG1g");
+			}
+			break;
+		//kevin macleod link
+		case 1:
+			if (IsKeyPressed(KEY_SPACE))
+			{
+				raylib::OpenURL("https://incompetech.com/");
+			}
+			break;
+		//creative commons link
+		case 2:
+			if (IsKeyPressed(KEY_SPACE))
+			{
+				raylib::OpenURL("http://creativecommons.org/licenses/by/3.0/");
+			}
+			break;
+		//back button
+		case 3:
+			if (IsKeyPressed(KEY_SPACE))
+			{
+				menuState = MENU_TITLE;
+				menuButtonIndex = 3;
+				break;
+			}
 	}
 }
 
@@ -1040,23 +1072,23 @@ void SceneGame::DrawTitleMenu()
 
 	std::string startText = "START";
 	float startWidth = mainFont.MeasureText(startText, buttonTextSize, buttonTextSize * BASE_FONT_SPACING).x;
-	mainFont.DrawText(startText, raylib::Vector2(screenWidth / 2.0f - startWidth / 2.0f, screenHeight / 2.0f - buttonTextSize / 2.0f), buttonTextSize, buttonTextSize * BASE_FONT_SPACING, menuButtonIndex == 0 ? raylib::Color::Yellow() : raylib::Color::White());
+	mainFont.DrawText(startText, raylib::Vector2(screenWidth / 2.0f - startWidth / 2.0f, screenHeight / 2.0f - buttonTextSize / 2.0f), buttonTextSize, buttonTextSize * BASE_FONT_SPACING, menuButtonIndex == 0 ? raylib::Color::Yellow() : raylib::Color::LightGray());
 
 	std::string optionsText = "OPTIONS";
 	float optionsWidth = mainFont.MeasureText(optionsText, buttonTextSize, buttonTextSize * BASE_FONT_SPACING).x;
-	mainFont.DrawText(optionsText, raylib::Vector2(screenWidth / 2.0f - optionsWidth / 2.0f, screenHeight / 2.0f + buttonTextSize - buttonTextSize / 2.0f), buttonTextSize, buttonTextSize * BASE_FONT_SPACING, menuButtonIndex == 1 ? raylib::Color::Yellow() : raylib::Color::White());
+	mainFont.DrawText(optionsText, raylib::Vector2(screenWidth / 2.0f - optionsWidth / 2.0f, screenHeight / 2.0f + buttonTextSize - buttonTextSize / 2.0f), buttonTextSize, buttonTextSize * BASE_FONT_SPACING, menuButtonIndex == 1 ? raylib::Color::Yellow() : raylib::Color::LightGray());
 
 	std::string controlsText = "CONTROLS";
 	float controlsWidth = mainFont.MeasureText(controlsText, buttonTextSize, buttonTextSize * BASE_FONT_SPACING).x;
-	mainFont.DrawText(controlsText, raylib::Vector2(screenWidth / 2.0f - controlsWidth / 2.0f, screenHeight / 2.0f + buttonTextSize * 2 - buttonTextSize / 2.0f), buttonTextSize, buttonTextSize * BASE_FONT_SPACING, menuButtonIndex == 2 ? raylib::Color::Yellow() : raylib::Color::White());
+	mainFont.DrawText(controlsText, raylib::Vector2(screenWidth / 2.0f - controlsWidth / 2.0f, screenHeight / 2.0f + buttonTextSize * 2 - buttonTextSize / 2.0f), buttonTextSize, buttonTextSize * BASE_FONT_SPACING, menuButtonIndex == 2 ? raylib::Color::Yellow() : raylib::Color::LightGray());
 
 	std::string creditsText = "CREDITS";
 	float creditsWidth = mainFont.MeasureText(creditsText, buttonTextSize, buttonTextSize * BASE_FONT_SPACING).x;
-	mainFont.DrawText(creditsText, raylib::Vector2(screenWidth / 2.0f - creditsWidth / 2.0f, screenHeight / 2.0f + buttonTextSize * 3 - buttonTextSize / 2.0f), buttonTextSize, buttonTextSize * BASE_FONT_SPACING, menuButtonIndex == 3 ? raylib::Color::Yellow() : raylib::Color::White());
+	mainFont.DrawText(creditsText, raylib::Vector2(screenWidth / 2.0f - creditsWidth / 2.0f, screenHeight / 2.0f + buttonTextSize * 3 - buttonTextSize / 2.0f), buttonTextSize, buttonTextSize * BASE_FONT_SPACING, menuButtonIndex == 3 ? raylib::Color::Yellow() : raylib::Color::LightGray());
 
 	std::string quitText = "QUIT";
 	float quitWidth = mainFont.MeasureText(quitText, buttonTextSize, buttonTextSize * BASE_FONT_SPACING).x;
-	mainFont.DrawText(quitText, raylib::Vector2(screenWidth / 2.0f - quitWidth / 2.0f, screenHeight / 2.0f + buttonTextSize * 4 - buttonTextSize / 2.0f), buttonTextSize, buttonTextSize * BASE_FONT_SPACING, menuButtonIndex == 4 ? raylib::Color::Yellow() : raylib::Color::White());
+	mainFont.DrawText(quitText, raylib::Vector2(screenWidth / 2.0f - quitWidth / 2.0f, screenHeight / 2.0f + buttonTextSize * 4 - buttonTextSize / 2.0f), buttonTextSize, buttonTextSize * BASE_FONT_SPACING, menuButtonIndex == 4 ? raylib::Color::Yellow() : raylib::Color::LightGray());
 }
 
 void SceneGame::DrawOptionsMenu()
@@ -1102,40 +1134,40 @@ void SceneGame::DrawOptionsMenu()
 	musicText += gameOptions.PlayMusic ? "ON" : "OFF";
 
 	float musicTextWidth = mainFont.MeasureText(musicText, optionTextSize, optionTextSize * BASE_FONT_SPACING).x;
-	mainFont.DrawText(musicText, raylib::Vector2(screenWidth / 2.0f - musicTextWidth / 2.0f, screenHeight / 2.0f - optionTextSize / 2.0f), optionTextSize, optionTextSize * BASE_FONT_SPACING, menuButtonIndex == 0 ? raylib::Color::Yellow() : raylib::Color::White());
+	mainFont.DrawText(musicText, raylib::Vector2(screenWidth / 2.0f - musicTextWidth / 2.0f, screenHeight / 2.0f - optionTextSize / 2.0f), optionTextSize, optionTextSize * BASE_FONT_SPACING, menuButtonIndex == 0 ? raylib::Color::Yellow() : raylib::Color::LightGray());
 
 	//Strobing lights
 	std::string strobingLightsText = "STROBING LIGHTS: ";
 	strobingLightsText += gameOptions.EnableStrobingLights ? "ON" : "OFF";
 
 	float strobingLightsWidth = mainFont.MeasureText(strobingLightsText, optionTextSize, optionTextSize * BASE_FONT_SPACING).x;
-	mainFont.DrawText(strobingLightsText, raylib::Vector2(screenWidth / 2.0f - strobingLightsWidth / 2.0f, screenHeight / 2.0f + optionTextSize - optionTextSize / 2.0f), optionTextSize, optionTextSize * BASE_FONT_SPACING, menuButtonIndex == 1 ? raylib::Color::Yellow() : raylib::Color::White());
+	mainFont.DrawText(strobingLightsText, raylib::Vector2(screenWidth / 2.0f - strobingLightsWidth / 2.0f, screenHeight / 2.0f + optionTextSize - optionTextSize / 2.0f), optionTextSize, optionTextSize * BASE_FONT_SPACING, menuButtonIndex == 1 ? raylib::Color::Yellow() : raylib::Color::LightGray());
 
 	//Width
 	std::string widthText = std::format("WIDTH: < {:0} >", gameOptions.GridSize.x);
 
 	float widthTextWidth = mainFont.MeasureText(widthText, optionTextSize, optionTextSize * BASE_FONT_SPACING).x;
-	mainFont.DrawText(widthText, raylib::Vector2(screenWidth / 2.0f - widthTextWidth / 2.0f, screenHeight / 2.0f + optionTextSize * 2 - optionTextSize / 2.0f), optionTextSize, optionTextSize * BASE_FONT_SPACING, menuButtonIndex == 2 ? raylib::Color::Yellow() : raylib::Color::White());
+	mainFont.DrawText(widthText, raylib::Vector2(screenWidth / 2.0f - widthTextWidth / 2.0f, screenHeight / 2.0f + optionTextSize * 2 - optionTextSize / 2.0f), optionTextSize, optionTextSize * BASE_FONT_SPACING, menuButtonIndex == 2 ? raylib::Color::Yellow() : raylib::Color::LightGray());
 
 	//Height
 	std::string heightText = std::format("HEIGHT: < {:0} >", gameOptions.GridSize.y);
 
 	float heightTextWidth = mainFont.MeasureText(heightText, optionTextSize, optionTextSize * BASE_FONT_SPACING).x;
-	mainFont.DrawText(heightText, raylib::Vector2(screenWidth / 2.0f - heightTextWidth / 2.0f, screenHeight / 2.0f + optionTextSize * 3 - optionTextSize / 2.0f), optionTextSize, optionTextSize * BASE_FONT_SPACING, menuButtonIndex == 3 ? raylib::Color::Yellow() : raylib::Color::White());
+	mainFont.DrawText(heightText, raylib::Vector2(screenWidth / 2.0f - heightTextWidth / 2.0f, screenHeight / 2.0f + optionTextSize * 3 - optionTextSize / 2.0f), optionTextSize, optionTextSize * BASE_FONT_SPACING, menuButtonIndex == 3 ? raylib::Color::Yellow() : raylib::Color::LightGray());
 
 	//Show ghost piece
 	std::string ghostPieceText = "GHOST PIECE: ";
 	ghostPieceText += gameOptions.ShowGhostPiece ? "ON" : "OFF";
 
 	float ghostPieceTextWidth = mainFont.MeasureText(ghostPieceText, optionTextSize, optionTextSize * BASE_FONT_SPACING).x;
-	mainFont.DrawText(ghostPieceText, raylib::Vector2(screenWidth / 2.0f - ghostPieceTextWidth / 2.0f, screenHeight / 2.0f + optionTextSize * 4 - optionTextSize / 2.0f), optionTextSize, optionTextSize * BASE_FONT_SPACING, menuButtonIndex == 4 ? raylib::Color::Yellow() : raylib::Color::White());
+	mainFont.DrawText(ghostPieceText, raylib::Vector2(screenWidth / 2.0f - ghostPieceTextWidth / 2.0f, screenHeight / 2.0f + optionTextSize * 4 - optionTextSize / 2.0f), optionTextSize, optionTextSize * BASE_FONT_SPACING, menuButtonIndex == 4 ? raylib::Color::Yellow() : raylib::Color::LightGray());
 
 	//Buttons
 	float buttonTextSize = 52 * aspectScale;
 
 	std::string backText = "BACK";
 	float backWidth = mainFont.MeasureText(backText, buttonTextSize, buttonTextSize * BASE_FONT_SPACING).x;
-	mainFont.DrawText(backText, raylib::Vector2(screenWidth / 2.0f - backWidth / 2.0f, screenHeight / 2.0f + buttonTextSize * 4 - buttonTextSize / 2.0f), buttonTextSize, buttonTextSize * BASE_FONT_SPACING, menuButtonIndex == 5 ? raylib::Color::Yellow() : raylib::Color::White());
+	mainFont.DrawText(backText, raylib::Vector2(screenWidth / 2.0f - backWidth / 2.0f, screenHeight / 2.0f + buttonTextSize * 4 - buttonTextSize / 2.0f), buttonTextSize, buttonTextSize * BASE_FONT_SPACING, menuButtonIndex == 5 ? raylib::Color::Yellow() : raylib::Color::LightGray());
 }
 
 void SceneGame::DrawControlsMenu()
@@ -1178,7 +1210,7 @@ void SceneGame::DrawControlsMenu()
 
 	std::string backText = "BACK";
 	float backWidth = mainFont.MeasureText(backText, buttonTextSize, buttonTextSize * BASE_FONT_SPACING).x;
-	mainFont.DrawText(backText, raylib::Vector2(screenWidth / 2.0f - backWidth / 2.0f, screenHeight / 2.0f + buttonTextSize * 4 - buttonTextSize / 2.0f), buttonTextSize, buttonTextSize * BASE_FONT_SPACING, menuButtonIndex == 0 ? raylib::Color::Yellow() : raylib::Color::White());
+	mainFont.DrawText(backText, raylib::Vector2(screenWidth / 2.0f - backWidth / 2.0f, screenHeight / 2.0f + buttonTextSize * 4 - buttonTextSize / 2.0f), buttonTextSize, buttonTextSize * BASE_FONT_SPACING, menuButtonIndex == 0 ? raylib::Color::Yellow() : raylib::Color::LightGray());
 }
 
 void SceneGame::DrawCreditsMenu()
@@ -1216,12 +1248,41 @@ void SceneGame::DrawCreditsMenu()
 		titleTextX += titleCharWidth + (titleTextSize / 10);
 	}
 
+	//music credits
+	//"Bleeping Demo", "Nowhere Land"
+	//Kevin MacLeod(incompetech.com)
+		//Licensed under Creative Commons : By Attribution 3.0
+		//http://creativecommons.org/licenses/by/3.0/
+
+	//credits
+	float creditsTextSize = 28 * aspectScale;
+
+	std::string recreationText = "RECREATION - KiaraDev (YouTube)";
+	float recreationTextWidth = mainFont.MeasureText(recreationText, creditsTextSize, creditsTextSize * BASE_FONT_SPACING).x;
+	mainFont.DrawText(recreationText, raylib::Vector2(screenWidth / 2.0f - recreationTextWidth / 2.0f, screenHeight / 2.0f - creditsTextSize / 2.0f), creditsTextSize, creditsTextSize * BASE_FONT_SPACING, menuButtonIndex == 0 ? raylib::Color::Yellow() : raylib::Color::LightGray());
+
+	std::string musicCreditsText1 = "\"Bleeping Demo\", \"Nowhere Land\"";
+	float musicCreditsTextWidth1 = mainFont.MeasureText(musicCreditsText1, creditsTextSize, creditsTextSize * BASE_FONT_SPACING).x;
+	mainFont.DrawText(musicCreditsText1, raylib::Vector2(screenWidth / 2.0f - musicCreditsTextWidth1 / 2.0f, screenHeight / 2.0f + creditsTextSize * 2 - creditsTextSize / 2.0f), creditsTextSize, creditsTextSize * BASE_FONT_SPACING, raylib::Color::White());
+
+	std::string musicCreditsText2 = "Kevin MacLeod(incompetech.com)";
+	float musicCreditsTextWidth2 = mainFont.MeasureText(musicCreditsText2, creditsTextSize, creditsTextSize * BASE_FONT_SPACING).x;
+	mainFont.DrawText(musicCreditsText2, raylib::Vector2(screenWidth / 2.0f - musicCreditsTextWidth2 / 2.0f, screenHeight / 2.0f + creditsTextSize * 3 - creditsTextSize / 2.0f), creditsTextSize, creditsTextSize * BASE_FONT_SPACING, menuButtonIndex == 1 ? raylib::Color::Yellow() : raylib::Color::LightGray());
+
+	std::string musicCreditsText3 = "Licensed under Creative Commons : By Attribution 3.0";
+	float musicCreditsTextWidth3 = mainFont.MeasureText(musicCreditsText3, creditsTextSize, creditsTextSize * BASE_FONT_SPACING).x;
+	mainFont.DrawText(musicCreditsText3, raylib::Vector2(screenWidth / 2.0f - musicCreditsTextWidth3 / 2.0f, screenHeight / 2.0f + creditsTextSize * 4 - creditsTextSize / 2.0f), creditsTextSize, creditsTextSize * BASE_FONT_SPACING, raylib::Color::White());
+
+	std::string musicCreditsText4 = "http://creativecommons.org/licenses/by/3.0/";
+	float musicCreditsTextWidth4 = mainFont.MeasureText(musicCreditsText4, creditsTextSize, creditsTextSize * BASE_FONT_SPACING).x;
+	mainFont.DrawText(musicCreditsText4, raylib::Vector2(screenWidth / 2.0f - musicCreditsTextWidth4 / 2.0f, screenHeight / 2.0f + creditsTextSize * 5 - creditsTextSize / 2.0f), creditsTextSize, creditsTextSize * BASE_FONT_SPACING, menuButtonIndex == 2 ? raylib::Color::Yellow() : raylib::Color::LightGray());
+
 	//Buttons
 	float buttonTextSize = 52 * aspectScale;
 
 	std::string backText = "BACK";
 	float backWidth = mainFont.MeasureText(backText, buttonTextSize, buttonTextSize * BASE_FONT_SPACING).x;
-	mainFont.DrawText(backText, raylib::Vector2(screenWidth / 2.0f - backWidth / 2.0f, screenHeight / 2.0f + buttonTextSize * 4 - buttonTextSize / 2.0f), buttonTextSize, buttonTextSize * BASE_FONT_SPACING, menuButtonIndex == 0 ? raylib::Color::Yellow() : raylib::Color::White());
+	mainFont.DrawText(backText, raylib::Vector2(screenWidth / 2.0f - backWidth / 2.0f, screenHeight / 2.0f + buttonTextSize * 4 - buttonTextSize / 2.0f), buttonTextSize, buttonTextSize * BASE_FONT_SPACING, menuButtonIndex == 3 ? raylib::Color::Yellow() : raylib::Color::LightGray());
 }
 #pragma endregion
 
