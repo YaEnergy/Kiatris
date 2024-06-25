@@ -23,7 +23,7 @@ void SceneGame::Init()
 void SceneGame::Update()
 {
 	//Menu theme
-	if (menuState != MENU_NONE)
+	if (menuState != MENU_NONE && gameOptions.PlayMusic)
 	{
 		raylib::Music& menuTheme = GetMusic("MenuTheme");
 
@@ -68,13 +68,19 @@ void SceneGame::Update()
 				std::cout << "Paused state: " + std::to_string(gamePaused)  << std::endl;
 			}
 
+#if DEBUG
+			if (IsKeyPressed(KEY_B))
+				level++;
+#endif
+
 			if (!gamePaused)
 				UpdateGameplay();
 
 			if (!mainTheme.IsPlaying())
 				mainTheme.Play();
 
-			mainTheme.Update();
+			if (gameOptions.PlayMusic)
+				mainTheme.Update();
 
 			break;
 	}
@@ -275,7 +281,12 @@ void SceneGame::UpdatePieceGravity()
 		gravityPieceDeltaTime = 1.0f / 20.0f;
 
 	int gravityLevel = std::min(level - 1, 14);
-	float gravityMovementTime = IsKeyDown(KEY_DOWN) ? 1.0f / 20.0f : std::powf(0.8f - ((float)gravityLevel * 0.007f), (float)gravityLevel);
+
+	float gravityMovementTime = std::powf(0.8f - ((float)gravityLevel * 0.007f), (float)gravityLevel);
+
+	//Soft drop speed
+	if (IsKeyDown(KEY_DOWN) && gravityMovementTime > 1.0f / 20.0f)
+		gravityMovementTime = 1.0f / 20.0f;
 
 	while (gravityPieceDeltaTime >= gravityMovementTime)
 	{
@@ -393,7 +404,7 @@ void SceneGame::DrawGame()
 
 	raylib::Font& mainFont = GetFont("MainFont");
 
-	raylib::Color mainColor = raylib::Color::FromHSV(45.0f * (level - 1) + sinf(gameWindow.GetTime()) * 5.0f + 211.0f, 1.0f, 1.0f);
+	raylib::Color mainColor = raylib::Color::FromHSV(45.0f * (level - 1) + sinf(gameWindow.GetTime()) * 5.0f + 211.0f, 1.0f, 0.8f);
 
 	raylib::Color gridBackgroundColor = raylib::Color::Black().Alpha(0.6f);
 
@@ -536,7 +547,7 @@ void SceneGame::DrawGame()
 	mainFont.DrawText(timeValText, raylib::Vector2(fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize * 7 + statPanelHeightPadding), statTextFontSize, statTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
 
 	//Borders
-	raylib::Color borderColor = raylib::Color::FromHSV(45.0f * (level - 1) + sinf(gameWindow.GetTime()) * 5.0f + 221.0f, 1.0f, 1.0f);;
+	raylib::Color borderColor = raylib::Color::FromHSV(45.0f * (level - 1) - sinf(gameWindow.GetTime()) * 5.0f + 221.0f, 1.0f, 1.0f);;
 	
 	if (gameOver)
 		borderColor = (Wrap(gameWindow.GetTime(), 0.0f, 0.5f) < 0.25f || !gameOptions.EnableStrobingLights) ? raylib::Color::Red() : borderColor;
@@ -887,21 +898,28 @@ void SceneGame::UpdateTitleMenu()
 void SceneGame::UpdateOptionsMenu()
 {
 	if (IsKeyPressed(KEY_DOWN))
-		menuButtonIndex = Wrap(menuButtonIndex + 1, 0, 5);
+		menuButtonIndex = Wrap(menuButtonIndex + 1, 0, 6);
 	else if (IsKeyPressed(KEY_UP))
-		menuButtonIndex = Wrap(menuButtonIndex - 1, 0, 5);
+		menuButtonIndex = Wrap(menuButtonIndex - 1, 0, 6);
 
 	switch (menuButtonIndex)
 	{
-		//strobing lights option
+		//play music option
 		case 0:
+			if (IsKeyPressed(KEY_SPACE))
+			{
+				gameOptions.PlayMusic = !gameOptions.PlayMusic;
+			}
+			break;
+		//strobing lights option
+		case 1:
 			if (IsKeyPressed(KEY_SPACE))
 			{
 				gameOptions.EnableStrobingLights = !gameOptions.EnableStrobingLights;
 			}
 			break;
 		//grid width option
-		case 1:
+		case 2:
 		{
 			const int MAX_GRID_WIDTH = 30;
 			const int MIN_GRID_WIDTH = 3;
@@ -924,7 +942,7 @@ void SceneGame::UpdateOptionsMenu()
 			break;
 		}
 		//grid height option
-		case 2:
+		case 3:
 		{
 			const int MAX_GRID_HEIGHT = 60;
 			const int MIN_GRID_HEIGHT = 16;
@@ -947,14 +965,14 @@ void SceneGame::UpdateOptionsMenu()
 			break;
 		}
 		//ghost piece option
-		case 3:
+		case 4:
 			if (IsKeyPressed(KEY_SPACE))
 			{
 				gameOptions.ShowGhostPiece = !gameOptions.ShowGhostPiece;
 			}
 			break;
 		//back button
-		case 4:
+		case 5:
 			if (IsKeyPressed(KEY_SPACE))
 			{
 				menuState = MENU_TITLE;
@@ -1079,38 +1097,45 @@ void SceneGame::DrawOptionsMenu()
 	//Options
 	float optionTextSize = 40 * aspectScale;
 
+	//MUSIC
+	std::string musicText = "MUSIC: ";
+	musicText += gameOptions.PlayMusic ? "ON" : "OFF";
+
+	float musicTextWidth = mainFont.MeasureText(musicText, optionTextSize, optionTextSize * BASE_FONT_SPACING).x;
+	mainFont.DrawText(musicText, raylib::Vector2(screenWidth / 2.0f - musicTextWidth / 2.0f, screenHeight / 2.0f - optionTextSize / 2.0f), optionTextSize, optionTextSize * BASE_FONT_SPACING, menuButtonIndex == 0 ? raylib::Color::Yellow() : raylib::Color::White());
+
 	//Strobing lights
 	std::string strobingLightsText = "STROBING LIGHTS: ";
 	strobingLightsText += gameOptions.EnableStrobingLights ? "ON" : "OFF";
 
 	float strobingLightsWidth = mainFont.MeasureText(strobingLightsText, optionTextSize, optionTextSize * BASE_FONT_SPACING).x;
-	mainFont.DrawText(strobingLightsText, raylib::Vector2(screenWidth / 2.0f - strobingLightsWidth / 2.0f, screenHeight / 2.0f - optionTextSize / 2.0f), optionTextSize, optionTextSize * BASE_FONT_SPACING, menuButtonIndex == 0 ? raylib::Color::Yellow() : raylib::Color::White());
+	mainFont.DrawText(strobingLightsText, raylib::Vector2(screenWidth / 2.0f - strobingLightsWidth / 2.0f, screenHeight / 2.0f + optionTextSize - optionTextSize / 2.0f), optionTextSize, optionTextSize * BASE_FONT_SPACING, menuButtonIndex == 1 ? raylib::Color::Yellow() : raylib::Color::White());
 
 	//Width
 	std::string widthText = std::format("WIDTH: < {:0} >", gameOptions.GridSize.x);
 
 	float widthTextWidth = mainFont.MeasureText(widthText, optionTextSize, optionTextSize * BASE_FONT_SPACING).x;
-	mainFont.DrawText(widthText, raylib::Vector2(screenWidth / 2.0f - widthTextWidth / 2.0f, screenHeight / 2.0f + optionTextSize - optionTextSize / 2.0f), optionTextSize, optionTextSize * BASE_FONT_SPACING, menuButtonIndex == 1 ? raylib::Color::Yellow() : raylib::Color::White());
+	mainFont.DrawText(widthText, raylib::Vector2(screenWidth / 2.0f - widthTextWidth / 2.0f, screenHeight / 2.0f + optionTextSize * 2 - optionTextSize / 2.0f), optionTextSize, optionTextSize * BASE_FONT_SPACING, menuButtonIndex == 2 ? raylib::Color::Yellow() : raylib::Color::White());
 
 	//Height
 	std::string heightText = std::format("HEIGHT: < {:0} >", gameOptions.GridSize.y);
 
 	float heightTextWidth = mainFont.MeasureText(heightText, optionTextSize, optionTextSize * BASE_FONT_SPACING).x;
-	mainFont.DrawText(heightText, raylib::Vector2(screenWidth / 2.0f - heightTextWidth / 2.0f, screenHeight / 2.0f + optionTextSize * 2 - optionTextSize / 2.0f), optionTextSize, optionTextSize * BASE_FONT_SPACING, menuButtonIndex == 2 ? raylib::Color::Yellow() : raylib::Color::White());
+	mainFont.DrawText(heightText, raylib::Vector2(screenWidth / 2.0f - heightTextWidth / 2.0f, screenHeight / 2.0f + optionTextSize * 3 - optionTextSize / 2.0f), optionTextSize, optionTextSize * BASE_FONT_SPACING, menuButtonIndex == 3 ? raylib::Color::Yellow() : raylib::Color::White());
 
 	//Show ghost piece
 	std::string ghostPieceText = "GHOST PIECE: ";
 	ghostPieceText += gameOptions.ShowGhostPiece ? "ON" : "OFF";
 
 	float ghostPieceTextWidth = mainFont.MeasureText(ghostPieceText, optionTextSize, optionTextSize * BASE_FONT_SPACING).x;
-	mainFont.DrawText(ghostPieceText, raylib::Vector2(screenWidth / 2.0f - ghostPieceTextWidth / 2.0f, screenHeight / 2.0f + optionTextSize * 3 - optionTextSize / 2.0f), optionTextSize, optionTextSize * BASE_FONT_SPACING, menuButtonIndex == 3 ? raylib::Color::Yellow() : raylib::Color::White());
+	mainFont.DrawText(ghostPieceText, raylib::Vector2(screenWidth / 2.0f - ghostPieceTextWidth / 2.0f, screenHeight / 2.0f + optionTextSize * 4 - optionTextSize / 2.0f), optionTextSize, optionTextSize * BASE_FONT_SPACING, menuButtonIndex == 4 ? raylib::Color::Yellow() : raylib::Color::White());
 
 	//Buttons
 	float buttonTextSize = 52 * aspectScale;
 
 	std::string backText = "BACK";
 	float backWidth = mainFont.MeasureText(backText, buttonTextSize, buttonTextSize * BASE_FONT_SPACING).x;
-	mainFont.DrawText(backText, raylib::Vector2(screenWidth / 2.0f - backWidth / 2.0f, screenHeight / 2.0f + buttonTextSize * 4 - buttonTextSize / 2.0f), buttonTextSize, buttonTextSize * BASE_FONT_SPACING, menuButtonIndex == 4 ? raylib::Color::Yellow() : raylib::Color::White());
+	mainFont.DrawText(backText, raylib::Vector2(screenWidth / 2.0f - backWidth / 2.0f, screenHeight / 2.0f + buttonTextSize * 4 - buttonTextSize / 2.0f), buttonTextSize, buttonTextSize * BASE_FONT_SPACING, menuButtonIndex == 5 ? raylib::Color::Yellow() : raylib::Color::White());
 }
 
 void SceneGame::DrawControlsMenu()
@@ -1223,8 +1248,10 @@ void SceneGame::Draw()
 			break;
 	}
 
+#if DEBUG
 	//For debug purposes
 	DrawText(TextFormat("Button index: %i", menuButtonIndex), 12, 12 + 24, 24, raylib::Color::White());
+#endif
 }
 
 void SceneGame::Destroy()

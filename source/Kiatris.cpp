@@ -22,12 +22,15 @@ class Game
 			window.ClearBackground(raylib::BLACK);
 
 			sceneGame.Draw();
+
+#if DEBUG
 			window.DrawFPS(10, 10);
+#endif
 
 			window.EndDrawing();
 		}
 	public:
-		Game() : window(DESIGN_WIDTH, DESIGN_HEIGHT, "Kiatris", FLAG_VSYNC_HINT), audioDevice(), sceneGame(window, GameOptions{ 3, Vector2Int{10, 20}, true, true })
+		Game() : window(DESIGN_WIDTH, DESIGN_HEIGHT, "Kiatris", FLAG_VSYNC_HINT), audioDevice(), sceneGame(window, GameOptions())
 		{
 			raylib::Image icon = raylib::Image("assets/textures/kiatrisicon.png");
 			window.SetIcon(icon);

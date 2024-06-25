@@ -4,12 +4,13 @@
 
 struct GameOptions
 {
+	bool PlayMusic;
 	int NumUpAndComingPieces;
 	Vector2Int GridSize;
 	bool ShowGhostPiece;
 	bool EnableStrobingLights;
 
-	GameOptions(int numUpAndComingPieces, Vector2Int gridSize, bool showGhostPiece, bool enableStrobingLights)
+	GameOptions(bool PlayMusic, int numUpAndComingPieces, Vector2Int gridSize, bool showGhostPiece, bool enableStrobingLights)
 	{
 		NumUpAndComingPieces = numUpAndComingPieces;
 		GridSize = gridSize;
@@ -19,6 +20,7 @@ struct GameOptions
 
 	GameOptions()
 	{
+		PlayMusic = true;
 		NumUpAndComingPieces = 3;
 		GridSize = Vector2Int(10, 20);
 		ShowGhostPiece = true;
