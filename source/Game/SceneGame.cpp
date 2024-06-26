@@ -846,10 +846,18 @@ void SceneGame::DrawGrid(float posX, float posY, float blockSize, raylib::Textur
 #pragma region Menus
 void SceneGame::UpdateTitleMenu()
 {
+
+#ifdef PLATFORM_WEB
+	//get rid of the quit button
+	int numButtons = 4;
+#else
+	int numButtons = 5;
+#endif
+
 	if (IsKeyPressed(KEY_DOWN))
-		menuButtonIndex = Wrap(menuButtonIndex + 1, 0, 5);
+		menuButtonIndex = Wrap(menuButtonIndex + 1, 0, numButtons);
 	else if (IsKeyPressed(KEY_UP))
-		menuButtonIndex = Wrap(menuButtonIndex - 1, 0, 5);
+		menuButtonIndex = Wrap(menuButtonIndex - 1, 0, numButtons);
 
 	switch (menuButtonIndex)
 	{
@@ -1086,9 +1094,12 @@ void SceneGame::DrawTitleMenu()
 	float creditsWidth = mainFont.MeasureText(creditsText, buttonTextSize, buttonTextSize * BASE_FONT_SPACING).x;
 	mainFont.DrawText(creditsText, raylib::Vector2(screenWidth / 2.0f - creditsWidth / 2.0f, screenHeight / 2.0f + buttonTextSize * 3 - buttonTextSize / 2.0f), buttonTextSize, buttonTextSize * BASE_FONT_SPACING, menuButtonIndex == 3 ? raylib::Color::Yellow() : raylib::Color::LightGray());
 
+#ifndef PLATFORM_WEB
 	std::string quitText = "QUIT";
 	float quitWidth = mainFont.MeasureText(quitText, buttonTextSize, buttonTextSize * BASE_FONT_SPACING).x;
 	mainFont.DrawText(quitText, raylib::Vector2(screenWidth / 2.0f - quitWidth / 2.0f, screenHeight / 2.0f + buttonTextSize * 4 - buttonTextSize / 2.0f), buttonTextSize, buttonTextSize * BASE_FONT_SPACING, menuButtonIndex == 4 ? raylib::Color::Yellow() : raylib::Color::LightGray());
+#endif // !PLATFORM_WEB
+
 }
 
 void SceneGame::DrawOptionsMenu()

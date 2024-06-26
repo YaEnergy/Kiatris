@@ -111,22 +111,22 @@ Piece Piece::GetMainPiece(MainPieceType mainPieceType)
 	switch (mainPieceType)
 	{
 		case PIECE_O:
-			newPiece.pivotOffset = { 0.5f, 0.5f };
+			newPiece.pivotOffset = raylib::Vector2{ 0.5f, 0.5f };
 
 			for (int i = 0; i < NUM_MAIN_PIECE_BLOCKS; i++)
 				newPiece.blockColors[i] = raylib::Color::Yellow();
 
-			newPiece.blockOffsets[0] = { 0, 0 };
-			newPiece.blockOffsets[1] = { 1, 0 };
-			newPiece.blockOffsets[2] = { 0, 1 };
-			newPiece.blockOffsets[3] = { 1, 1 };
+			newPiece.blockOffsets[0] = Vector2Int{ 0, 0 };
+			newPiece.blockOffsets[1] = Vector2Int{ 1, 0 };
+			newPiece.blockOffsets[2] = Vector2Int{ 0, 1 };
+			newPiece.blockOffsets[3] = Vector2Int{ 1, 1 };
 
 			break;
 		case PIECE_I:
-			newPiece.pivotOffset = { 0.5f, 0.5f };
+			newPiece.pivotOffset = raylib::Vector2{ 0.5f, 0.5f };
 			for (int i = 0; i < NUM_MAIN_PIECE_BLOCKS; i++)
 			{
-				newPiece.blockOffsets[i] = { 1, i - 1 };
+				newPiece.blockOffsets[i] = Vector2Int{ 1, i - 1 };
 				newPiece.blockColors[i] = raylib::Color::SkyBlue();
 			}
 			break;
@@ -134,50 +134,50 @@ Piece Piece::GetMainPiece(MainPieceType mainPieceType)
 			for (int i = 0; i < NUM_MAIN_PIECE_BLOCKS; i++)
 				newPiece.blockColors[i] = raylib::Color::Red();
 
-			newPiece.blockOffsets[0] = { 0, 0 };
-			newPiece.blockOffsets[1] = { 1, 0 };
-			newPiece.blockOffsets[2] = { 0, -1 };
-			newPiece.blockOffsets[3] = { -1, -1 };
+			newPiece.blockOffsets[0] = Vector2Int{ 0, 0 };
+			newPiece.blockOffsets[1] = Vector2Int{ 1, 0 };
+			newPiece.blockOffsets[2] = Vector2Int{ 0, -1 };
+			newPiece.blockOffsets[3] = Vector2Int{ -1, -1 };
 
 			break;
 		case PIECE_Z:
 			for (int i = 0; i < NUM_MAIN_PIECE_BLOCKS; i++)
 				newPiece.blockColors[i] = raylib::Color::Green();
 
-			newPiece.blockOffsets[0] = { 0, 0 };
-			newPiece.blockOffsets[1] = { -1, 0 };
-			newPiece.blockOffsets[2] = { 0, -1 };
-			newPiece.blockOffsets[3] = { 1, -1 };
+			newPiece.blockOffsets[0] = Vector2Int{ 0, 0 };
+			newPiece.blockOffsets[1] = Vector2Int{ -1, 0 };
+			newPiece.blockOffsets[2] = Vector2Int{ 0, -1 };
+			newPiece.blockOffsets[3] = Vector2Int{ 1, -1 };
 
 			break;
 		case PIECE_L:
 			for (int i = 0; i < NUM_MAIN_PIECE_BLOCKS - 1; i++)
 			{
-				newPiece.blockOffsets[i] = { 0, i - 1 };
+				newPiece.blockOffsets[i] = Vector2Int{ 0, i - 1 };
 				newPiece.blockColors[i] = raylib::Color::Orange();
 			}
 
-			newPiece.blockOffsets[NUM_MAIN_PIECE_BLOCKS - 1] = { 1, -1 };
+			newPiece.blockOffsets[NUM_MAIN_PIECE_BLOCKS - 1] = Vector2Int{ 1, -1 };
 			newPiece.blockColors[NUM_MAIN_PIECE_BLOCKS - 1] = raylib::Color::Orange();
 			break;
 		case PIECE_J:
 			for (int i = 0; i < NUM_MAIN_PIECE_BLOCKS - 1; i++)
 			{
-				newPiece.blockOffsets[i] = { 0, i - 1 };
+				newPiece.blockOffsets[i] = Vector2Int{ 0, i - 1 };
 				newPiece.blockColors[i] = raylib::Color::Pink();
 			}
 
-			newPiece.blockOffsets[NUM_MAIN_PIECE_BLOCKS - 1] = { -1, -1 };
+			newPiece.blockOffsets[NUM_MAIN_PIECE_BLOCKS - 1] = Vector2Int{ -1, -1 };
 			newPiece.blockColors[NUM_MAIN_PIECE_BLOCKS - 1] = raylib::Color::Pink();
 			break;
 		case PIECE_T:
 			for (int i = 0; i < NUM_MAIN_PIECE_BLOCKS - 1; i++)
 			{
-				newPiece.blockOffsets[i] = { i - 1, 0 };
+				newPiece.blockOffsets[i] = Vector2Int{ i - 1, 0 };
 				newPiece.blockColors[i] = raylib::Color::Purple();
 			}
 
-			newPiece.blockOffsets[NUM_MAIN_PIECE_BLOCKS - 1] = { 0, 1 };
+			newPiece.blockOffsets[NUM_MAIN_PIECE_BLOCKS - 1] = Vector2Int{ 0, 1 };
 			newPiece.blockColors[NUM_MAIN_PIECE_BLOCKS - 1] = raylib::Color::Purple();
 			break;
 	}

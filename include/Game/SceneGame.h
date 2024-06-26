@@ -103,7 +103,6 @@ class SceneGame : public Scene
 	public:
 		SceneGame(raylib::Window& window, GameOptions options) : gameWindow(window)
 		{
-
 			gameOptions = options;
 
 			upAndComingPieces.clear();

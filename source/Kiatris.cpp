@@ -6,17 +6,27 @@
 #include "raylib-cpp.hpp"
 #include "Game/SceneGame.h"
 
+#ifdef PLATFORM_WEB
+	#include "emscripten.h"
+#endif
+
+//args = Game class instance, must be done for Emscripten due to it not acceping C++ methods
+void UpdateDrawFrame(void* args);
+
 class Game
 {
 	private:
 		raylib::Window window;
 		raylib::AudioDevice audioDevice;
 		SceneGame sceneGame;
-
-		void UpdateDrawFrame()
+	public:
+		void Update()
 		{
 			sceneGame.Update();
+		}
 
+		void Draw()
+		{
 			window.BeginDrawing();
 
 			window.ClearBackground(raylib::BLACK);
@@ -29,7 +39,7 @@ class Game
 
 			window.EndDrawing();
 		}
-	public:
+
 		Game() : window(DESIGN_WIDTH, DESIGN_HEIGHT, "Kiatris", FLAG_VSYNC_HINT), audioDevice(), sceneGame(window, GameOptions())
 		{
 			raylib::Image icon = raylib::Image("assets/textures/kiatrisicon.png");
@@ -53,11 +63,15 @@ class Game
 
 			window.EndDrawing();
 
+			HideCursor();
+
 			//Load
 			LoadAssets();
 
 			//TODO: loading assets, flags, init, Emscripten modifications, audio device
-
+#if defined(PLATFORM_WEB)
+			emscripten_set_main_loop_arg(UpdateDrawFrame, this, 0, 1);
+#else
 			while (!window.ShouldClose() && !sceneGame.WantsToQuit)
 			{
 				if (GetCurrentMonitor() != monitor)
@@ -66,8 +80,9 @@ class Game
 					window.SetTargetFPS(GetMonitorRefreshRate(monitor));
 				}
 
-				UpdateDrawFrame();
+				UpdateDrawFrame(this);
 			}
+#endif
 			
 			icon.Unload();
 			UnloadAssets();
@@ -90,3 +105,10 @@ int main()
 	return 0;
 }
 #endif
+
+//args = Game class instance, must be done for Emscripten due to it not acceping C++ methods
+void UpdateDrawFrame(void* args)
+{
+	static_cast<Game*>(args)->Update();
+	static_cast<Game*>(args)->Draw();
+}
