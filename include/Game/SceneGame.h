@@ -26,7 +26,7 @@ class SceneGame : public Scene
 		GameOptions gameOptions;
 
 		Piece currentPiece;
-		Vector2Int currentPiecePosition = { 0, 0 };
+		Vector2Int currentPiecePosition = Vector2Int{ 0, 0 };
 		float gravityPieceDeltaTime = 0.0f;
 		float movementPieceDeltaTime = 0.0f;
 
@@ -77,6 +77,8 @@ class SceneGame : public Scene
 		void DrawOptionsMenu();
 		void DrawControlsMenu();
 		void DrawCreditsMenu();
+
+		void DrawBuildInfo();
 
 		//Pieces
 

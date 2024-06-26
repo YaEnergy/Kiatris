@@ -9,3 +9,15 @@
 
 const int DESIGN_WIDTH = 800;
 const int DESIGN_HEIGHT = 480;
+
+const std::string VERSION = "1.0.0";
+
+#ifdef PLATFORM_WEB
+const std::string PLATFORM = "Web";
+#elif PLATFORM_DESKTOP
+const std::string PLATFORM = "Desktop";
+#endif
+
+#ifdef WIN32RELEASE
+int main();
+#endif

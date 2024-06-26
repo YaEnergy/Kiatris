@@ -93,18 +93,16 @@ class Game
 #if WIN32RELEASE
 int WinMain()
 {
-	Game game;
-
-	return 0;
+	return main();
 }
-#else
+#endif
+
 int main()
 {
 	Game game;
 
 	return 0;
 }
-#endif
 
 //args = Game class instance, must be done for Emscripten due to it not acceping C++ methods
 void UpdateDrawFrame(void* args)

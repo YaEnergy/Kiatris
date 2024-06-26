@@ -1100,6 +1100,7 @@ void SceneGame::DrawTitleMenu()
 	mainFont.DrawText(quitText, raylib::Vector2(screenWidth / 2.0f - quitWidth / 2.0f, screenHeight / 2.0f + buttonTextSize * 4 - buttonTextSize / 2.0f), buttonTextSize, buttonTextSize * BASE_FONT_SPACING, menuButtonIndex == 4 ? raylib::Color::Yellow() : raylib::Color::LightGray());
 #endif // !PLATFORM_WEB
 
+	DrawBuildInfo();
 }
 
 void SceneGame::DrawOptionsMenu()
@@ -1179,6 +1180,8 @@ void SceneGame::DrawOptionsMenu()
 	std::string backText = "BACK";
 	float backWidth = mainFont.MeasureText(backText, buttonTextSize, buttonTextSize * BASE_FONT_SPACING).x;
 	mainFont.DrawText(backText, raylib::Vector2(screenWidth / 2.0f - backWidth / 2.0f, screenHeight / 2.0f + buttonTextSize * 4 - buttonTextSize / 2.0f), buttonTextSize, buttonTextSize * BASE_FONT_SPACING, menuButtonIndex == 5 ? raylib::Color::Yellow() : raylib::Color::LightGray());
+
+	DrawBuildInfo();
 }
 
 void SceneGame::DrawControlsMenu()
@@ -1222,6 +1225,8 @@ void SceneGame::DrawControlsMenu()
 	std::string backText = "BACK";
 	float backWidth = mainFont.MeasureText(backText, buttonTextSize, buttonTextSize * BASE_FONT_SPACING).x;
 	mainFont.DrawText(backText, raylib::Vector2(screenWidth / 2.0f - backWidth / 2.0f, screenHeight / 2.0f + buttonTextSize * 4 - buttonTextSize / 2.0f), buttonTextSize, buttonTextSize * BASE_FONT_SPACING, menuButtonIndex == 0 ? raylib::Color::Yellow() : raylib::Color::LightGray());
+
+	DrawBuildInfo();
 }
 
 void SceneGame::DrawCreditsMenu()
@@ -1294,6 +1299,26 @@ void SceneGame::DrawCreditsMenu()
 	std::string backText = "BACK";
 	float backWidth = mainFont.MeasureText(backText, buttonTextSize, buttonTextSize * BASE_FONT_SPACING).x;
 	mainFont.DrawText(backText, raylib::Vector2(screenWidth / 2.0f - backWidth / 2.0f, screenHeight / 2.0f + buttonTextSize * 4 - buttonTextSize / 2.0f), buttonTextSize, buttonTextSize * BASE_FONT_SPACING, menuButtonIndex == 3 ? raylib::Color::Yellow() : raylib::Color::LightGray());
+
+	DrawBuildInfo();
+}
+
+void SceneGame::DrawBuildInfo()
+{
+	int screenWidth = gameWindow.GetWidth();
+	int screenHeight = gameWindow.GetHeight();
+
+	float aspectScale = std::min((float)screenWidth / DESIGN_WIDTH, (float)screenHeight / DESIGN_HEIGHT);
+
+	raylib::Font& mainFont = GetFont("MainFont");
+
+	//Build info
+	float buildInfoTextSize = 12 * aspectScale;
+	mainFont.DrawText(VERSION + " - " + PLATFORM, raylib::Vector2(5 * aspectScale, screenHeight - buildInfoTextSize - 5 * aspectScale), buildInfoTextSize, buildInfoTextSize / 10.0f, raylib::Color::White());
+
+#ifdef DEBUG
+	mainFont.DrawText("DEBUG", raylib::Vector2(5 * aspectScale, screenHeight - buildInfoTextSize * 2 - 5 * aspectScale), buildInfoTextSize, buildInfoTextSize / 10.0f, raylib::Color::White());
+#endif
 }
 #pragma endregion
 
