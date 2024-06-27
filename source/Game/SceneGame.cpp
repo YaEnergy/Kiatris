@@ -365,13 +365,13 @@ void SceneGame::UpdateGameOver()
 	{
 		//retry button
 		case 0:
-			if (IsKeyPressed(KEY_SPACE))
+			if (IsConfirmButtonPressed())
 				StartGame();
 
 			break;
 		//menu button
 		case 1:
-			if (IsKeyPressed(KEY_SPACE))
+			if (IsConfirmButtonPressed())
 				ReturnToMenu();
 
 			break;
