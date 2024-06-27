@@ -1242,9 +1242,9 @@ void SceneGame::DrawControlsMenu()
 	}
 
 	//Controls
-	float controlsTextSize = 28 * aspectScale;
+	float controlsTextSize = 24 * aspectScale;
 
-	std::string controlsText = "LEFT - Left/A | RIGHT - Right/D\nCLOCKWISE ROTATE - Up/W/X/R\nCOUNTER-CLOCKWISE ROTATE - L Ctrl/R Ctrl/Z/E\n180 DEG ROTATE - T\nSOFT DROP - Down/S\nHARD DROP/CONFIRM - Space/Enter\nHOLD - C/Left Shift/Right Shift";
+	std::string controlsText = "LEFT - Left/A | RIGHT - Right/D\nCLOCKWISE ROTATE - Up/W/X/R\nCOUNTER-CLOCKWISE ROTATE - L Ctrl/R Ctrl/Z/E\n180 DEG ROTATE - T\nSOFT DROP - Down/S\nHARD DROP/CONFIRM - Space/Enter\nHOLD - C/Left Shift/Right Shift\nPAUSE - ESC/F1";
 	int lineY = 0;
 
 	//Draw every line aligned along the center of the screen
