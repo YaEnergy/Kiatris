@@ -1091,7 +1091,7 @@ void SceneGame::DrawTitleMenu()
 	}
 
 	//Buttons
-	float buttonTextSize = 52 * aspectScale;
+	float buttonTextSize = 48 * aspectScale;
 
 	std::string startText = "START";
 	float startWidth = mainFont.MeasureText(startText, buttonTextSize, buttonTextSize * BASE_FONT_SPACING).x;
@@ -1116,6 +1116,13 @@ void SceneGame::DrawTitleMenu()
 #endif // !PLATFORM_WEB
 
 	DrawBuildInfo();
+
+	//Help text
+	float helpTextSize = 12 * aspectScale;
+	std::string helpText = "MOVE - Up/Down Arrow | CONFIRM - Space/Enter";
+
+	float helpTextWidth = mainFont.MeasureText(helpText, helpTextSize, helpTextSize * BASE_FONT_SPACING).x;
+	mainFont.DrawText(helpText, raylib::Vector2(screenWidth / 2.0f - helpTextWidth / 2.0f, screenHeight / 2.0f + buttonTextSize * 5 + 6 * aspectScale - buttonTextSize / 2.0f), helpTextSize, helpTextSize * BASE_FONT_SPACING, raylib::Color::White());
 }
 
 void SceneGame::DrawOptionsMenu()

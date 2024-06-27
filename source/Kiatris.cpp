@@ -66,7 +66,6 @@ class Game
 			//Load
 			LoadAssets();
 
-			//TODO: loading assets, flags, init, Emscripten modifications, audio device
 #if defined(PLATFORM_WEB)
 			DisableCursor();
 
