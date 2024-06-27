@@ -63,15 +63,17 @@ class Game
 
 			window.EndDrawing();
 
-			HideCursor();
-
 			//Load
 			LoadAssets();
 
 			//TODO: loading assets, flags, init, Emscripten modifications, audio device
 #if defined(PLATFORM_WEB)
+			DisableCursor();
+
 			emscripten_set_main_loop_arg(UpdateDrawFrame, this, 0, 1);
 #else
+			HideCursor();
+
 			while (!window.ShouldClose() && !sceneGame.WantsToQuit)
 			{
 				if (GetCurrentMonitor() != monitor)

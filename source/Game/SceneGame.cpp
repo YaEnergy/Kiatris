@@ -15,6 +15,11 @@ static float FitTextWidth(raylib::Font& font, const std::string text, const floa
 	return BASE_FONT_SIZE / font.MeasureText(text, BASE_FONT_SIZE, BASE_FONT_SIZE * percentageSpacing).x * width;
 }
 
+static bool IsConfirmButtonPressed()
+{
+	return IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_SPACE);
+}
+
 void SceneGame::Init()
 {
 	
@@ -202,7 +207,7 @@ void SceneGame::UpdateGameplay()
 
 	UpdatePieceMovement();
 
-	if (IsKeyPressed(KEY_SPACE))
+	if (IsConfirmButtonPressed())
 	{
 		HardDropPiece();
 		PlacePiece();
@@ -873,7 +878,7 @@ void SceneGame::UpdateTitleMenu()
 	{
 		//start button
 		case 0:
-			if (IsKeyPressed(KEY_SPACE))
+			if (IsConfirmButtonPressed())
 			{
 				menuState = MENU_NONE;
 				StartGame();
@@ -881,7 +886,7 @@ void SceneGame::UpdateTitleMenu()
 			break;
 		//options button
 		case 1:
-			if (IsKeyPressed(KEY_SPACE))
+			if (IsConfirmButtonPressed())
 			{
 				menuState = MENU_OPTIONS;
 				menuButtonIndex = 0;
@@ -889,7 +894,7 @@ void SceneGame::UpdateTitleMenu()
 			break;
 		//controls button
 		case 2:
-			if (IsKeyPressed(KEY_SPACE))
+			if (IsConfirmButtonPressed())
 			{
 				menuState = MENU_CONTROLS;
 				menuButtonIndex = 0;
@@ -897,7 +902,7 @@ void SceneGame::UpdateTitleMenu()
 			break;
 		//credits button
 		case 3:
-			if (IsKeyPressed(KEY_SPACE))
+			if (IsConfirmButtonPressed())
 			{
 				menuState = MENU_CREDITS;
 				menuButtonIndex = 0;
@@ -905,7 +910,7 @@ void SceneGame::UpdateTitleMenu()
 			break;
 		//quit button
 		case 4:
-			if (IsKeyPressed(KEY_SPACE))
+			if (IsConfirmButtonPressed())
 			{
 				WantsToQuit = true;
 			}
@@ -924,14 +929,14 @@ void SceneGame::UpdateOptionsMenu()
 	{
 		//play music option
 		case 0:
-			if (IsKeyPressed(KEY_SPACE))
+			if (IsConfirmButtonPressed())
 			{
 				gameOptions.PlayMusic = !gameOptions.PlayMusic;
 			}
 			break;
 		//strobing lights option
 		case 1:
-			if (IsKeyPressed(KEY_SPACE))
+			if (IsConfirmButtonPressed())
 			{
 				gameOptions.EnableStrobingLights = !gameOptions.EnableStrobingLights;
 			}
@@ -942,7 +947,7 @@ void SceneGame::UpdateOptionsMenu()
 			const int MAX_GRID_WIDTH = 30;
 			const int MIN_GRID_WIDTH = 3;
 
-			if (IsKeyPressed(KEY_SPACE) || IsKeyPressed(KEY_RIGHT))
+			if (IsConfirmButtonPressed() || IsKeyPressed(KEY_RIGHT))
 			{
 				if (gameOptions.GridSize.x + 1 > MAX_GRID_WIDTH)
 					SetGridSize(Vector2Int{ MIN_GRID_WIDTH, gameOptions.GridSize.y });
@@ -965,7 +970,7 @@ void SceneGame::UpdateOptionsMenu()
 			const int MAX_GRID_HEIGHT = 60;
 			const int MIN_GRID_HEIGHT = 16;
 
-			if (IsKeyPressed(KEY_SPACE) || IsKeyPressed(KEY_RIGHT))
+			if (IsConfirmButtonPressed() || IsKeyPressed(KEY_RIGHT))
 			{
 				if (gameOptions.GridSize.y + 1 > MAX_GRID_HEIGHT)
 					SetGridSize(Vector2Int{ gameOptions.GridSize.x, MIN_GRID_HEIGHT });
@@ -984,14 +989,14 @@ void SceneGame::UpdateOptionsMenu()
 		}
 		//ghost piece option
 		case 4:
-			if (IsKeyPressed(KEY_SPACE))
+			if (IsConfirmButtonPressed())
 			{
 				gameOptions.ShowGhostPiece = !gameOptions.ShowGhostPiece;
 			}
 			break;
 		//back button
 		case 5:
-			if (IsKeyPressed(KEY_SPACE))
+			if (IsConfirmButtonPressed())
 			{
 				menuState = MENU_TITLE;
 				menuButtonIndex = 1;
@@ -1002,7 +1007,7 @@ void SceneGame::UpdateOptionsMenu()
 
 void SceneGame::UpdateControlsMenu()
 {
-	if (IsKeyPressed(KEY_SPACE))
+	if (IsConfirmButtonPressed())
 	{
 		menuState = MENU_TITLE;
 		menuButtonIndex = 2;
@@ -1020,28 +1025,28 @@ void SceneGame::UpdateCreditsMenu()
 	{
 		//yt link
 		case 0:
-			if (IsKeyPressed(KEY_SPACE))
+			if (IsConfirmButtonPressed())
 			{
 				raylib::OpenURL("https://www.youtube.com/channel/UCVjBKRRHM1u8FYEnmt6JG1g");
 			}
 			break;
 		//kevin macleod link
 		case 1:
-			if (IsKeyPressed(KEY_SPACE))
+			if (IsConfirmButtonPressed())
 			{
 				raylib::OpenURL("https://incompetech.com/");
 			}
 			break;
 		//creative commons link
 		case 2:
-			if (IsKeyPressed(KEY_SPACE))
+			if (IsConfirmButtonPressed())
 			{
 				raylib::OpenURL("http://creativecommons.org/licenses/by/3.0/");
 			}
 			break;
 		//back button
 		case 3:
-			if (IsKeyPressed(KEY_SPACE))
+			if (IsConfirmButtonPressed())
 			{
 				menuState = MENU_TITLE;
 				menuButtonIndex = 3;
@@ -1227,6 +1232,40 @@ void SceneGame::DrawControlsMenu()
 
 		int titleCharWidth = raylib::MeasureText(titleChar, titleTextSize);
 		titleTextX += titleCharWidth + (titleTextSize / 10);
+	}
+
+	//Controls
+	float controlsTextSize = 28 * aspectScale;
+
+	std::string controlsText = "MOVEMENT - Arrow keys\nCLOCKWISE ROTATE - Up/X/R\nCOUNTER-CLOCKWISE ROTATE - L Ctrl/R Ctrl/Z/E\n180 DEG ROTATE - T\nSOFT DROP - Down\nHARD DROP/CONFIRM - Space/Enter\nHOLD - C/Left Shift/Right Shift";
+	int lineY = 0;
+
+	//Draw every line aligned along the center of the screen
+	while (controlsText != "")
+	{
+		int endLineIndex = controlsText.find('\n', 0);
+
+		std::string controlText = "";
+		
+		//final line
+		if (endLineIndex == std::string::npos)
+		{
+			controlText = controlsText;
+			controlsText = "";
+		}
+		//Get next line and remove it
+		else
+		{
+			controlText = controlsText.substr(0, endLineIndex);
+
+			controlsText.erase(0, endLineIndex + 1);
+		}
+
+		//Draw line
+		float controlTextWidth = mainFont.MeasureText(controlText, controlsTextSize, controlsTextSize * BASE_FONT_SPACING).x;
+		mainFont.DrawText(controlText, raylib::Vector2(screenWidth / 2.0f - controlTextWidth / 2.0f, screenHeight / 2.0f + controlsTextSize * lineY - controlsTextSize / 2.0f), controlsTextSize, controlsTextSize * BASE_FONT_SPACING, raylib::Color::White());
+
+		lineY++;
 	}
 
 	//Buttons
