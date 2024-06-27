@@ -60,7 +60,7 @@ class SceneGame : public Scene
 		void UpdateGameplay();
 		void UpdatePieceMovement();
 		void UpdatePieceGravity();
-		void LineClearCheck();
+		void LineClearCheck(int topY, int bottomY);
 		void UpdateGameOver();
 		void EndGame();
 		void ReturnToMenu();

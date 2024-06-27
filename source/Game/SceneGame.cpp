@@ -311,10 +311,10 @@ void SceneGame::UpdatePieceGravity()
 		EndGame();
 }
 
-void SceneGame::LineClearCheck()
+void SceneGame::LineClearCheck(int topY, int bottomY)
 {
-	//check all lines
-	for (int y = 0; y < gameOptions.GridSize.y; y++)
+	//check affected lines
+	for (int y = topY; y <= bottomY; y++)
 	{
 		bool isClear = true;
 
@@ -339,6 +339,8 @@ void SceneGame::LineClearCheck()
 			isClearingLines = true;
 		}
 	}
+
+	std::cout << "Checked lines " + std::to_string(topY) + " - " + std::to_string(bottomY) << std::endl;
 
 	if (isClearingLines)
 	{
@@ -641,11 +643,20 @@ void SceneGame::NextPiece()
 
 void SceneGame::PlacePiece()
 {
+	int topPieceY = INT32_MAX;
+	int bottomPieceY = INT32_MIN;
+
 	//Place piece into grid
 	for (int i = 0; i < currentPiece.numBlocks; i++)
 	{
 		if (!IsCellInBounds(currentPiecePosition.x + currentPiece.blockOffsets[i].x, currentPiecePosition.y + currentPiece.blockOffsets[i].y))
 			continue;
+
+		if (currentPiece.blockOffsets[i].y > bottomPieceY)
+			bottomPieceY = currentPiece.blockOffsets[i].y;
+
+		if (currentPiece.blockOffsets[i].y < topPieceY)
+			topPieceY = currentPiece.blockOffsets[i].y;
 
 		grid[currentPiecePosition.y + currentPiece.blockOffsets[i].y][currentPiecePosition.x + currentPiece.blockOffsets[i].x].color = currentPiece.blockColors[i];
 		grid[currentPiecePosition.y + currentPiece.blockOffsets[i].y][currentPiecePosition.x + currentPiece.blockOffsets[i].x].state = BLOCK_GRID;
@@ -656,8 +667,7 @@ void SceneGame::PlacePiece()
 	std::cout << "Placed piece!" << std::endl;
 
 	//Checks for cleared lines
-	//TODO: only check lines the placed piece affects instead of all lines
-	LineClearCheck();
+	LineClearCheck(currentPiecePosition.y + topPieceY, currentPiecePosition.y + bottomPieceY);
 
 	GetSound("PlacePiece").Play();
 
