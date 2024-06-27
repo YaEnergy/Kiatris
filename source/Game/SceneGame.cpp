@@ -228,7 +228,7 @@ void SceneGame::UpdatePieceMovement()
 	//rotation
 	if (IsKeyPressed(KEY_LEFT_CONTROL) || IsKeyPressed(KEY_RIGHT_CONTROL) || IsKeyPressed(KEY_Z) || IsKeyPressed(KEY_E))
 		piece = piece.GetLeftRotation(); //Counter-clockwise
-	else if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_X) || IsKeyPressed(KEY_R))
+	else if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_X) || IsKeyPressed(KEY_R) || IsKeyPressed(KEY_W))
 		piece = piece.GetRightRotation(); //Clockwise
 	else if (IsKeyPressed(KEY_T))
 		piece = piece.GetHalfCircleRotation();
@@ -237,17 +237,17 @@ void SceneGame::UpdatePieceMovement()
 	Vector2Int movement = { 0, 0 };
 	const float movePieceTime = 1.0f / 5.0f;
 
-	if (IsKeyDown(KEY_RIGHT))
+	if (IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_D))
 	{
-		if (IsKeyPressed(KEY_RIGHT))
+		if (IsKeyPressed(KEY_RIGHT) || IsKeyPressed(KEY_D))
 			movementPieceDeltaTime = movePieceTime;
 
 		movement.x = 1;
 
 	}
-	else if (IsKeyDown(KEY_LEFT))
+	else if (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A))
 	{
-		if (IsKeyPressed(KEY_LEFT))
+		if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_A))
 			movementPieceDeltaTime = movePieceTime;
 
 		movement.x = -1;
@@ -255,7 +255,7 @@ void SceneGame::UpdatePieceMovement()
 
 	bool positionSuccess = false;
 
-	if ((IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_RIGHT)) && movementPieceDeltaTime >= movePieceTime)
+	if ((IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A) || IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_D)) && movementPieceDeltaTime >= movePieceTime)
 	{
 		while (movementPieceDeltaTime >= movePieceTime)
 		{
@@ -282,7 +282,7 @@ void SceneGame::UpdatePieceMovement()
 
 void SceneGame::UpdatePieceGravity()
 {
-	if (IsKeyPressed(KEY_DOWN))
+	if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S))
 		gravityPieceDeltaTime = 1.0f / 20.0f;
 
 	int gravityLevel = std::min(level - 1, 14);
@@ -290,7 +290,7 @@ void SceneGame::UpdatePieceGravity()
 	float gravityMovementTime = std::powf(0.8f - ((float)gravityLevel * 0.007f), (float)gravityLevel);
 
 	//Soft drop speed
-	if (IsKeyDown(KEY_DOWN) && gravityMovementTime > 1.0f / 20.0f)
+	if ((IsKeyDown(KEY_DOWN) || IsKeyDown(KEY_S)) && gravityMovementTime > 1.0f / 20.0f)
 		gravityMovementTime = 1.0f / 20.0f;
 
 	while (gravityPieceDeltaTime >= gravityMovementTime)
@@ -356,9 +356,9 @@ void SceneGame::LineClearCheck(int topY, int bottomY)
 
 void SceneGame::UpdateGameOver()
 {
-	if (IsKeyPressed(KEY_DOWN))
+	if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S))
 		menuButtonIndex = Wrap(menuButtonIndex + 1, 0, 2);
-	else if (IsKeyPressed(KEY_UP))
+	else if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W))
 		menuButtonIndex = Wrap(menuButtonIndex - 1, 0, 2);
 
 	switch (menuButtonIndex)
@@ -869,9 +869,9 @@ void SceneGame::UpdateTitleMenu()
 	int numButtons = 5;
 #endif
 
-	if (IsKeyPressed(KEY_DOWN))
+	if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S))
 		menuButtonIndex = Wrap(menuButtonIndex + 1, 0, numButtons);
-	else if (IsKeyPressed(KEY_UP))
+	else if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W))
 		menuButtonIndex = Wrap(menuButtonIndex - 1, 0, numButtons);
 
 	switch (menuButtonIndex)
@@ -920,9 +920,9 @@ void SceneGame::UpdateTitleMenu()
 
 void SceneGame::UpdateOptionsMenu()
 {
-	if (IsKeyPressed(KEY_DOWN))
+	if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S))
 		menuButtonIndex = Wrap(menuButtonIndex + 1, 0, 6);
-	else if (IsKeyPressed(KEY_UP))
+	else if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W))
 		menuButtonIndex = Wrap(menuButtonIndex - 1, 0, 6);
 
 	switch (menuButtonIndex)
@@ -947,14 +947,14 @@ void SceneGame::UpdateOptionsMenu()
 			const int MAX_GRID_WIDTH = 30;
 			const int MIN_GRID_WIDTH = 3;
 
-			if (IsConfirmButtonPressed() || IsKeyPressed(KEY_RIGHT))
+			if (IsConfirmButtonPressed() || IsKeyPressed(KEY_RIGHT) || IsKeyPressed(KEY_D))
 			{
 				if (gameOptions.GridSize.x + 1 > MAX_GRID_WIDTH)
 					SetGridSize(Vector2Int{ MIN_GRID_WIDTH, gameOptions.GridSize.y });
 				else
 					SetGridSize(Vector2Int{ gameOptions.GridSize.x + 1, gameOptions.GridSize.y });
 			}
-			else if (IsKeyPressed(KEY_LEFT))
+			else if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_A))
 			{
 				if (gameOptions.GridSize.x - 1 < MIN_GRID_WIDTH)
 					SetGridSize(Vector2Int{ MAX_GRID_WIDTH, gameOptions.GridSize.y });
@@ -970,14 +970,14 @@ void SceneGame::UpdateOptionsMenu()
 			const int MAX_GRID_HEIGHT = 60;
 			const int MIN_GRID_HEIGHT = 16;
 
-			if (IsConfirmButtonPressed() || IsKeyPressed(KEY_RIGHT))
+			if (IsConfirmButtonPressed() || IsKeyPressed(KEY_RIGHT) || IsKeyPressed(KEY_D))
 			{
 				if (gameOptions.GridSize.y + 1 > MAX_GRID_HEIGHT)
 					SetGridSize(Vector2Int{ gameOptions.GridSize.x, MIN_GRID_HEIGHT });
 				else
 					SetGridSize(Vector2Int{ gameOptions.GridSize.x, gameOptions.GridSize.y + 1 });
 			}
-			else if (IsKeyPressed(KEY_LEFT))
+			else if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_A))
 			{
 				if (gameOptions.GridSize.y - 1 < MIN_GRID_HEIGHT)
 					SetGridSize(Vector2Int{ gameOptions.GridSize.x, MAX_GRID_HEIGHT });
@@ -1016,9 +1016,9 @@ void SceneGame::UpdateControlsMenu()
 
 void SceneGame::UpdateCreditsMenu()
 {
-	if (IsKeyPressed(KEY_DOWN))
+	if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S))
 		menuButtonIndex = Wrap(menuButtonIndex + 1, 0, 4);
-	else if (IsKeyPressed(KEY_UP))
+	else if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W))
 		menuButtonIndex = Wrap(menuButtonIndex - 1, 0, 4);
 
 	switch (menuButtonIndex)
@@ -1119,7 +1119,7 @@ void SceneGame::DrawTitleMenu()
 
 	//Help text
 	float helpTextSize = 12 * aspectScale;
-	std::string helpText = "MOVE - Up/Down Arrow | CONFIRM - Space/Enter";
+	std::string helpText = "MOVE UP - Up/W | MOVE DOWN - Down/S | CONFIRM - Space/Enter";
 
 	float helpTextWidth = mainFont.MeasureText(helpText, helpTextSize, helpTextSize * BASE_FONT_SPACING).x;
 	mainFont.DrawText(helpText, raylib::Vector2(screenWidth / 2.0f - helpTextWidth / 2.0f, screenHeight / 2.0f + buttonTextSize * 5 + 6 * aspectScale - buttonTextSize / 2.0f), helpTextSize, helpTextSize * BASE_FONT_SPACING, raylib::Color::White());
@@ -1244,7 +1244,7 @@ void SceneGame::DrawControlsMenu()
 	//Controls
 	float controlsTextSize = 28 * aspectScale;
 
-	std::string controlsText = "MOVEMENT - Arrow keys\nCLOCKWISE ROTATE - Up/X/R\nCOUNTER-CLOCKWISE ROTATE - L Ctrl/R Ctrl/Z/E\n180 DEG ROTATE - T\nSOFT DROP - Down\nHARD DROP/CONFIRM - Space/Enter\nHOLD - C/Left Shift/Right Shift";
+	std::string controlsText = "LEFT - Left/A | RIGHT - Right/D\nCLOCKWISE ROTATE - Up/W/X/R\nCOUNTER-CLOCKWISE ROTATE - L Ctrl/R Ctrl/Z/E\n180 DEG ROTATE - T\nSOFT DROP - Down/S\nHARD DROP/CONFIRM - Space/Enter\nHOLD - C/Left Shift/Right Shift";
 	int lineY = 0;
 
 	//Draw every line aligned along the center of the screen
