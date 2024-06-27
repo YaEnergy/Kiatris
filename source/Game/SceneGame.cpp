@@ -227,9 +227,9 @@ void SceneGame::UpdatePieceMovement()
 
 	//rotation
 	if (IsKeyPressed(KEY_LEFT_CONTROL) || IsKeyPressed(KEY_RIGHT_CONTROL) || IsKeyPressed(KEY_Z) || IsKeyPressed(KEY_E))
-		piece = piece.GetLeftRotation(); //Counter-clockwise
+		piece = piece.GetCounterClockwiseRotation(); //Counter-clockwise
 	else if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_X) || IsKeyPressed(KEY_R) || IsKeyPressed(KEY_W))
-		piece = piece.GetRightRotation(); //Clockwise
+		piece = piece.GetClockwiseRotation(); //Clockwise
 	else if (IsKeyPressed(KEY_T))
 		piece = piece.GetHalfCircleRotation();
 

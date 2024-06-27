@@ -1,12 +1,12 @@
 #include "Game/Piece.h"
 
-Piece Piece::GetLeftRotation() const
+Piece Piece::GetClockwiseRotation() const
 {
 	Piece rotatedPiece = Piece(numBlocks);
 	rotatedPiece.pivotOffset = pivotOffset;
 
 	//rotating around pivot
-	//90 degrees counter-clockwise rotation
+	//90 degrees clockwise rotation
 	for (int i = 0; i < numBlocks; i++)
 	{
 		rotatedPiece.blockColors[i] = blockColors[i];
@@ -18,13 +18,13 @@ Piece Piece::GetLeftRotation() const
 	return rotatedPiece;
 }
 
-Piece Piece::GetRightRotation() const
+Piece Piece::GetCounterClockwiseRotation() const
 {
 	Piece rotatedPiece = Piece(numBlocks);
 	rotatedPiece.pivotOffset = pivotOffset;
 
 	//rotating around pivot
-	//90 degrees clockwise rotation
+	//90 degrees counter-clockwise rotation
 	for (int i = 0; i < numBlocks; i++)
 	{
 		rotatedPiece.blockColors[i] = blockColors[i];

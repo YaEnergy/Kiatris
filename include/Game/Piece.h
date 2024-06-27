@@ -21,8 +21,8 @@ struct Piece
 	std::vector<raylib::Color> blockColors; //colors of blocks
 	int numBlocks; //amount of blocks
 
-	Piece GetLeftRotation() const;
-	Piece GetRightRotation() const;
+	Piece GetClockwiseRotation() const;
+	Piece GetCounterClockwiseRotation() const;
 	Piece GetHalfCircleRotation() const;
 
 	Vector2Int Measure() const;
