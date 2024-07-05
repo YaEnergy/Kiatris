@@ -74,25 +74,16 @@ if (${PLATFORM} MATCHES "Web")
     )
 endif()
 
-if (WIN32)
-    if (CMAKE_BUILD_TYPE STREQUAL "Release")
-        #this is to get rid of the console window. Yeah I know, I suck.
+if ((WIN32) AND (CMAKE_BUILD_TYPE STREQUAL "Release"))
+    #this is to get rid of the console window. Yeah I know, I suck.
 
-        # Add sources to this project's executable.
-        add_executable (${PROJECT_NAME} WIN32 ${SOURCES})
+    # Add sources to this project's executable.
+    add_executable (${PROJECT_NAME} WIN32 ${SOURCES})
 
-        add_compile_definitions(WIN32RELEASE)
-    else()
-        # Add sources to this project's executable.
-       add_executable (${PROJECT_NAME} ${SOURCES})
-    endif()
+    add_compile_definitions(WIN32RELEASE)
 else()
     # Add sources to this project's executable.
     add_executable (${PROJECT_NAME} ${SOURCES})
-
-    # if config is not debug set the variable to "-mwindows" else nothing
-    set(SUBSYSTEM_LINKER_OPTIONS "$<IF:$<NOT:$<CONFIG:Debug>>,-mwindows,>")
-    target_link_options(${PROJECT_NAME} PRIVATE ${SUBSYSTEM_LINKER_OPTIONS})
 endif()
 
  if (CMAKE_BUILD_TYPE STREQUAL "Debug")

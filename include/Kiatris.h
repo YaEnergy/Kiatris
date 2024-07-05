@@ -10,7 +10,7 @@
 const int DESIGN_WIDTH = 800;
 const int DESIGN_HEIGHT = 480;
 
-const std::string VERSION = "1.0.0";
+const std::string VERSION = "1.0.1";
 
 #ifdef PLATFORM_WEB
 const std::string PLATFORM = "Web";

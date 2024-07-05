@@ -68,6 +68,7 @@ class SceneGame : public Scene
 		void DrawGame();
 
 		//Menus
+		void UpdateMenuButtonNagivation(int startIndex, int endIndex);
 		void UpdateTitleMenu();
 		void UpdateOptionsMenu();
 		void UpdateControlsMenu();

@@ -10,8 +10,9 @@ struct GameOptions
 	bool ShowGhostPiece;
 	bool EnableStrobingLights;
 
-	GameOptions(bool PlayMusic, int numUpAndComingPieces, Vector2Int gridSize, bool showGhostPiece, bool enableStrobingLights)
+	GameOptions(bool playMusic, int numUpAndComingPieces, Vector2Int gridSize, bool showGhostPiece, bool enableStrobingLights)
 	{
+		PlayMusic = playMusic;
 		NumUpAndComingPieces = numUpAndComingPieces;
 		GridSize = gridSize;
 		ShowGhostPiece = showGhostPiece;

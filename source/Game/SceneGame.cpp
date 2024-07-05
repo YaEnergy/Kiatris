@@ -2,8 +2,6 @@
 #include "Game/SceneGame.h"
 #include "Assets.h"
 
-#include <format>
-
 const float BASE_FONT_SIZE = 12.0f;
 
 //Base font spacing multiplier
@@ -153,7 +151,7 @@ void SceneGame::UpdateGameplay()
 		{
 			//Clear lines
 			GetSound("LineClear").Play();
-			int numClearedLines = clearingLines.size();
+			int numClearedLines = (int)clearingLines.size();
 
 			for (int line : clearingLines)
 				ClearLine(line);
@@ -287,7 +285,7 @@ void SceneGame::UpdatePieceGravity()
 
 	int gravityLevel = std::min(level - 1, 14);
 
-	float gravityMovementTime = std::powf(0.8f - ((float)gravityLevel * 0.007f), (float)gravityLevel);
+	float gravityMovementTime = (float)std::pow(0.8f - ((float)gravityLevel * 0.007f), (float)gravityLevel);
 
 	//Soft drop speed
 	if ((IsKeyDown(KEY_DOWN) || IsKeyDown(KEY_S)) && gravityMovementTime > 1.0f / 20.0f)
@@ -356,10 +354,7 @@ void SceneGame::LineClearCheck(int topY, int bottomY)
 
 void SceneGame::UpdateGameOver()
 {
-	if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S))
-		menuButtonIndex = Wrap(menuButtonIndex + 1, 0, 2);
-	else if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W))
-		menuButtonIndex = Wrap(menuButtonIndex - 1, 0, 2);
+	UpdateMenuButtonNagivation(0, 1);
 
 	switch (menuButtonIndex)
 	{
@@ -404,14 +399,14 @@ void SceneGame::DrawGame()
 	const int UI_PIECE_LENGTH = 4;
 	const float BASE_FONT_SIZE = 12.0f;
 
-	float windowTime = gameWindow.GetTime();
+	double windowTime = gameWindow.GetTime();
 
 	int screenWidth = gameWindow.GetWidth();
 	int screenHeight = gameWindow.GetHeight();
 
 	raylib::Font& mainFont = GetFont("MainFont");
 
-	raylib::Color mainColor = raylib::Color::FromHSV(45.0f * (level - 1) + sinf(gameWindow.GetTime()) * 5.0f + 211.0f, 1.0f, 0.8f);
+	raylib::Color mainColor = raylib::Color::FromHSV(45.0f * (level - 1) + sinf((float)gameWindow.GetTime()) * 5.0f + 211.0f, 1.0f, 0.8f);
 
 	raylib::Color gridBackgroundColor = raylib::Color::Black().Alpha(0.6f);
 
@@ -419,7 +414,7 @@ void SceneGame::DrawGame()
 	raylib::Rectangle blockTextureSource = { 0.0f, 0.0f, (float)blockTexture.width, (float)blockTexture.height };
 
 	//Background
-	blockTexture.Draw(raylib::Rectangle(Wrap(windowTime, 0.0f, 1.0f) * (float)blockTexture.width, Wrap(windowTime, 0.0f, 1.0f) * (float)blockTexture.height, (float)screenWidth / 1.5f, (float)screenHeight / 1.5f), { 0, 0, (float)screenWidth, (float)screenHeight }, { 0, 0 }, 0.0f, mainColor.Brightness(0.2f));
+	blockTexture.Draw(raylib::Rectangle(Wrap((float)windowTime, 0.0f, 1.0f) * (float)blockTexture.width, Wrap((float)windowTime, 0.0f, 1.0f) * (float)blockTexture.height, (float)screenWidth / 1.5f, (float)screenHeight / 1.5f), { 0, 0, (float)screenWidth, (float)screenHeight }, { 0, 0 }, 0.0f, mainColor.Brightness(0.2f));
 
 	//Field
 
@@ -454,7 +449,7 @@ void SceneGame::DrawGame()
 		std::string pausedText = "PAUSED";
 		float pausedTextFontSize = FitTextWidth(mainFont, pausedText, gridSize.x / 2.0f, BASE_FONT_SPACING);
 
-		if (!gameOptions.EnableStrobingLights || Wrap(gameWindow.GetTime(), 0.0f, 0.5f) < 0.25f)
+		if (!gameOptions.EnableStrobingLights || Wrap((float)gameWindow.GetTime(), 0.0f, 0.5f) < 0.25f)
 			mainFont.DrawText(pausedText, raylib::Vector2(gridX + gridSize.x / 2.0f - gridSize.x / 4.0f, fieldY + gridSize.y / 2.0f - pausedTextFontSize / 2.0f), pausedTextFontSize, pausedTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
 	}
 
@@ -466,7 +461,7 @@ void SceneGame::DrawGame()
 		std::string gameOverText = "GAME OVER";
 		float gameOverTextFontSize = FitTextWidth(mainFont, gameOverText, gridSize.x / 1.5f, BASE_FONT_SPACING);
 
-		if (!gameOptions.EnableStrobingLights || Wrap(gameWindow.GetTime(), 0.0f, 0.5f) < 0.25f)
+		if (!gameOptions.EnableStrobingLights || Wrap((float)gameWindow.GetTime(), 0.0f, 0.5f) < 0.25f)
 			mainFont.DrawText(gameOverText, raylib::Vector2(gridX + gridSize.x / 2.0f - gridSize.x / 3.0f, fieldY + gridSize.y / 2.0f - gameOverTextFontSize / 2.0f), gameOverTextFontSize, gameOverTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
 
 		std::string retryText = "RETRY";
@@ -474,7 +469,7 @@ void SceneGame::DrawGame()
 		mainFont.DrawText(retryText, raylib::Vector2(gridX + gridSize.x / 2.0f - gridSize.x / 4.0f, fieldY + gridSize.y / 2.0f - gameOverTextFontSize / 2.0f + gameOverTextFontSize), retryTextFontSize, retryTextFontSize * BASE_FONT_SPACING, menuButtonIndex == 0 ? raylib::Color::Yellow() : raylib::Color::White());
 	
 		std::string menuText = "MENU";
-		int menuTextFontSize = FitTextWidth(mainFont, menuText, gridSize.x / 2.0f, BASE_FONT_SPACING);
+		float menuTextFontSize = FitTextWidth(mainFont, menuText, gridSize.x / 2.0f, BASE_FONT_SPACING);
 		mainFont.DrawText(menuText, raylib::Vector2(gridX + gridSize.x / 2.0f - gridSize.x / 4.0f, fieldY + gridSize.y / 2.0f - gameOverTextFontSize / 2.0f + gameOverTextFontSize + retryTextFontSize), menuTextFontSize, menuTextFontSize * BASE_FONT_SPACING, menuButtonIndex == 1 ? raylib::Color::Yellow() : raylib::Color::White());
 	}
 
@@ -506,10 +501,10 @@ void SceneGame::DrawGame()
 
 	mainFont.DrawText(nextText, raylib::Vector2(gridX + gridSize.x + 0.5f * blockSize, fieldY), nextTextFontSize, nextTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
 
-	int nextPieceStartX = gridX + gridSize.x;
+	float nextPieceStartX = gridX + gridSize.x;
 	for (int pieceIndex = 0; pieceIndex < gameOptions.NumUpAndComingPieces; pieceIndex++)
 	{
-		int pieceStartY = fieldY + nextTextFontSize + ((UI_PIECE_LENGTH + 1) * blockSize) * (pieceIndex);
+		float pieceStartY = fieldY + nextTextFontSize + ((UI_PIECE_LENGTH + 1) * blockSize) * (pieceIndex);
 
 		for (int i = 0; i < upAndComingPieces[pieceIndex].numBlocks; i++)
 		{
@@ -529,35 +524,31 @@ void SceneGame::DrawGame()
 	std::string scoreText = "SCORE";
 	mainFont.DrawText(scoreText, raylib::Vector2(fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statPanelHeightPadding), statTextFontSize, statTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
 
-	std::string scoreValText = std::format("{:0>6}", score);
-	mainFont.DrawText(scoreValText, raylib::Vector2(fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize + statPanelHeightPadding), statTextFontSize, statTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
+	mainFont.DrawText(TextFormat("%06i", score), raylib::Vector2(fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize + statPanelHeightPadding), statTextFontSize, statTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
 
 	//Level
 	std::string levelText = "LEVEL";
 	mainFont.DrawText(levelText, raylib::Vector2(fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize * 2 + statPanelHeightPadding), statTextFontSize, statTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
 
-	std::string levelValText = std::format("{:0>3}", level);
-	mainFont.DrawText(levelValText, raylib::Vector2(fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize * 3 + statPanelHeightPadding), statTextFontSize, statTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
+	mainFont.DrawText(TextFormat("%03i", level), raylib::Vector2(fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize * 3 + statPanelHeightPadding), statTextFontSize, statTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
 	
 	//Cleared lines
 	std::string clearedText = "LINES";
 	mainFont.DrawText(clearedText, raylib::Vector2(fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize * 4 + statPanelHeightPadding), statTextFontSize, statTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
-
-	std::string clearedValText = std::format("{:0>3}", totalLinesCleared);
-	mainFont.DrawText(clearedValText, raylib::Vector2(fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize * 5 + statPanelHeightPadding), statTextFontSize, statTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
+	
+	mainFont.DrawText(TextFormat("%03i", totalLinesCleared), raylib::Vector2(fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize * 5 + statPanelHeightPadding), statTextFontSize, statTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
 
 	//Time
 	std::string timeText = "TIME";
 	mainFont.DrawText(timeText, raylib::Vector2(fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize * 6 + statPanelHeightPadding), statTextFontSize, statTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
 
-	std::string timeValText = std::format("{:0>3}", std::truncf(timePlayingSeconds));
-	mainFont.DrawText(timeValText, raylib::Vector2(fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize * 7 + statPanelHeightPadding), statTextFontSize, statTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
+	mainFont.DrawText(TextFormat("%03.0f", timePlayingSeconds), raylib::Vector2(fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize * 7 + statPanelHeightPadding), statTextFontSize, statTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
 
 	//Borders
-	raylib::Color borderColor = raylib::Color::FromHSV(45.0f * (level - 1) - sinf(gameWindow.GetTime()) * 5.0f + 221.0f, 1.0f, 1.0f);;
+	raylib::Color borderColor = raylib::Color::FromHSV(45.0f * (level - 1) - sinf((float)gameWindow.GetTime()) * 5.0f + 221.0f, 1.0f, 1.0f);;
 	
 	if (gameOver)
-		borderColor = (Wrap(gameWindow.GetTime(), 0.0f, 0.5f) < 0.25f || !gameOptions.EnableStrobingLights) ? raylib::Color::Red() : borderColor;
+		borderColor = (Wrap((float)gameWindow.GetTime(), 0.0f, 0.5f) < 0.25f || !gameOptions.EnableStrobingLights) ? raylib::Color::Red() : borderColor;
 	else if (isClearingLines)
 		borderColor = raylib::Color(255 - borderColor.r, 255 - borderColor.g, 255 - borderColor.b, borderColor.a);
 
@@ -617,7 +608,7 @@ Piece SceneGame::GetRandomPieceFromBag()
 	if (bagPieces.size() == 0)
 		RefillBag();
 
-	int bagIndex = GetRandomValue(0, bagPieces.size() - 1);
+	int bagIndex = GetRandomValue(0, (int)bagPieces.size() - 1);
 
 	Piece piece = bagPieces[bagIndex];
 
@@ -859,6 +850,24 @@ void SceneGame::DrawGrid(float posX, float posY, float blockSize, raylib::Textur
 #pragma endregion
 
 #pragma region Menus
+void SceneGame::UpdateMenuButtonNagivation(int startIndex, int endIndex)
+{
+	if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S))
+	{
+		menuButtonIndex += 1;
+
+		if (menuButtonIndex > endIndex)
+			menuButtonIndex = startIndex;
+	}
+	else if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W))
+	{
+		menuButtonIndex -= 1;
+
+		if (menuButtonIndex < 0)
+			menuButtonIndex = endIndex;
+	}
+}
+
 void SceneGame::UpdateTitleMenu()
 {
 
@@ -869,10 +878,7 @@ void SceneGame::UpdateTitleMenu()
 	int numButtons = 5;
 #endif
 
-	if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S))
-		menuButtonIndex = Wrap(menuButtonIndex + 1, 0, numButtons);
-	else if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W))
-		menuButtonIndex = Wrap(menuButtonIndex - 1, 0, numButtons);
+	UpdateMenuButtonNagivation(0, numButtons - 1);
 
 	switch (menuButtonIndex)
 	{
@@ -920,10 +926,7 @@ void SceneGame::UpdateTitleMenu()
 
 void SceneGame::UpdateOptionsMenu()
 {
-	if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S))
-		menuButtonIndex = Wrap(menuButtonIndex + 1, 0, 6);
-	else if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W))
-		menuButtonIndex = Wrap(menuButtonIndex - 1, 0, 6);
+	UpdateMenuButtonNagivation(0, 5);
 
 	switch (menuButtonIndex)
 	{
@@ -1016,10 +1019,7 @@ void SceneGame::UpdateControlsMenu()
 
 void SceneGame::UpdateCreditsMenu()
 {
-	if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S))
-		menuButtonIndex = Wrap(menuButtonIndex + 1, 0, 4);
-	else if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W))
-		menuButtonIndex = Wrap(menuButtonIndex - 1, 0, 4);
+	UpdateMenuButtonNagivation(0, 3);
 
 	switch (menuButtonIndex)
 	{
@@ -1069,7 +1069,7 @@ void SceneGame::DrawTitleMenu()
 	backgroundColor.DrawRectangle(0, 0, screenWidth, screenHeight);
 
 	//Icon
-	float iconScale = (1.0f + (sinf(gameWindow.GetTime())) * 0.05f) * aspectScale;
+	float iconScale = (1.0f + (sinf((float)gameWindow.GetTime())) * 0.05f) * aspectScale;
 	raylib::Texture2D& iconTexture = GetTexture("Icon");
 	raylib::Rectangle iconSourceRect = raylib::Rectangle{ 0, 0, (float)iconTexture.width, (float)iconTexture.height };
 	iconTexture.Draw(iconSourceRect, raylib::Rectangle{ screenWidth / 2.0f, screenHeight / 2.0f - (float)iconTexture.height * iconScale, (float)iconTexture.width * iconScale, (float)iconTexture.height * iconScale }, { (float)iconTexture.width / 2.0f * iconScale, (float)iconTexture.height / 2.0f * iconScale }, 0.0f, raylib::Color::White());
@@ -1084,9 +1084,9 @@ void SceneGame::DrawTitleMenu()
 	{
 		std::string titleChar = std::string(1, titleText.at(i));
 
-		mainFont.DrawText(std::string(1, titleText.at(i)), raylib::Vector2(titleTextX, screenHeight / 2.0f - (float)iconTexture.height * iconScale * 1.5f - titleTextSize + sinf(gameWindow.GetTime() * 3.0f + i) * 4.0f * aspectScale), titleTextSize, titleTextSize * BASE_FONT_SPACING, raylib::Color::FromHSV(Wrap(gameWindow.GetTime() * 120.0f + 30.0f * i, 0.0f, 360.0f), 1.0f, 1.0f));
+		mainFont.DrawText(std::string(1, titleText.at(i)), raylib::Vector2(titleTextX, screenHeight / 2.0f - (float)iconTexture.height * iconScale * 1.5f - titleTextSize + sinf((float)gameWindow.GetTime() * 3.0f + i) * 4.0f * aspectScale), titleTextSize, titleTextSize * BASE_FONT_SPACING, raylib::Color::FromHSV(Wrap((float)gameWindow.GetTime() * 120.0f + 30.0f * i, 0.0f, 360.0f), 1.0f, 1.0f));
 		
-		int titleCharWidth = raylib::MeasureText(titleChar, titleTextSize);
+		float titleCharWidth = mainFont.MeasureText(titleChar, titleTextSize, titleTextSize * BASE_FONT_SPACING).x;
 		titleTextX += titleCharWidth + (titleTextSize / 10);
 	}
 
@@ -1139,7 +1139,7 @@ void SceneGame::DrawOptionsMenu()
 	backgroundColor.DrawRectangle(0, 0, screenWidth, screenHeight);
 
 	//Icon
-	float iconScale = (1.0f + (sinf(gameWindow.GetTime())) * 0.05f) * aspectScale;
+	float iconScale = (1.0f + (sinf((float)gameWindow.GetTime())) * 0.05f) * aspectScale;
 	raylib::Texture2D& iconTexture = GetTexture("Icon");
 	raylib::Rectangle iconSourceRect = raylib::Rectangle{ 0, 0, (float)iconTexture.width, (float)iconTexture.height };
 	iconTexture.Draw(iconSourceRect, raylib::Rectangle{ screenWidth / 2.0f, screenHeight / 2.0f - (float)iconTexture.height * iconScale, (float)iconTexture.width * iconScale, (float)iconTexture.height * iconScale }, { (float)iconTexture.width / 2.0f * iconScale, (float)iconTexture.height / 2.0f * iconScale }, 0.0f, raylib::Color::White());
@@ -1154,9 +1154,9 @@ void SceneGame::DrawOptionsMenu()
 	{
 		std::string titleChar = std::string(1, titleText.at(i));
 
-		mainFont.DrawText(std::string(1, titleText.at(i)), raylib::Vector2(titleTextX, screenHeight / 2.0f - (float)iconTexture.height * iconScale * 1.5f - titleTextSize + sinf(gameWindow.GetTime() * 3.0f + i) * 4.0f * aspectScale), titleTextSize, titleTextSize * BASE_FONT_SPACING, raylib::Color::FromHSV(Wrap(gameWindow.GetTime() * 120.0f + 30.0f * i, 0.0f, 360.0f), 1.0f, 1.0f));
+		mainFont.DrawText(std::string(1, titleText.at(i)), raylib::Vector2(titleTextX, screenHeight / 2.0f - (float)iconTexture.height * iconScale * 1.5f - titleTextSize + sinf((float)gameWindow.GetTime() * 3.0f + i) * 4.0f * aspectScale), titleTextSize, titleTextSize * BASE_FONT_SPACING, raylib::Color::FromHSV(Wrap((float)gameWindow.GetTime() * 120.0f + 30.0f * i, 0.0f, 360.0f), 1.0f, 1.0f));
 
-		int titleCharWidth = raylib::MeasureText(titleChar, titleTextSize);
+		float titleCharWidth = mainFont.MeasureText(titleChar, titleTextSize, titleTextSize * BASE_FONT_SPACING).x;
 		titleTextX += titleCharWidth + (titleTextSize / 10);
 	}
 
@@ -1178,16 +1178,12 @@ void SceneGame::DrawOptionsMenu()
 	mainFont.DrawText(strobingLightsText, raylib::Vector2(screenWidth / 2.0f - strobingLightsWidth / 2.0f, screenHeight / 2.0f + optionTextSize - optionTextSize / 2.0f), optionTextSize, optionTextSize * BASE_FONT_SPACING, menuButtonIndex == 1 ? raylib::Color::Yellow() : raylib::Color::LightGray());
 
 	//Width
-	std::string widthText = std::format("WIDTH: < {:0} >", gameOptions.GridSize.x);
-
-	float widthTextWidth = mainFont.MeasureText(widthText, optionTextSize, optionTextSize * BASE_FONT_SPACING).x;
-	mainFont.DrawText(widthText, raylib::Vector2(screenWidth / 2.0f - widthTextWidth / 2.0f, screenHeight / 2.0f + optionTextSize * 2 - optionTextSize / 2.0f), optionTextSize, optionTextSize * BASE_FONT_SPACING, menuButtonIndex == 2 ? raylib::Color::Yellow() : raylib::Color::LightGray());
+	float widthTextWidth = mainFont.MeasureText(TextFormat("WIDTH: < %i >", gameOptions.GridSize.x), optionTextSize, optionTextSize * BASE_FONT_SPACING).x;
+	mainFont.DrawText(TextFormat("WIDTH: < %i >", gameOptions.GridSize.x), raylib::Vector2(screenWidth / 2.0f - widthTextWidth / 2.0f, screenHeight / 2.0f + optionTextSize * 2 - optionTextSize / 2.0f), optionTextSize, optionTextSize * BASE_FONT_SPACING, menuButtonIndex == 2 ? raylib::Color::Yellow() : raylib::Color::LightGray());
 
 	//Height
-	std::string heightText = std::format("HEIGHT: < {:0} >", gameOptions.GridSize.y);
-
-	float heightTextWidth = mainFont.MeasureText(heightText, optionTextSize, optionTextSize * BASE_FONT_SPACING).x;
-	mainFont.DrawText(heightText, raylib::Vector2(screenWidth / 2.0f - heightTextWidth / 2.0f, screenHeight / 2.0f + optionTextSize * 3 - optionTextSize / 2.0f), optionTextSize, optionTextSize * BASE_FONT_SPACING, menuButtonIndex == 3 ? raylib::Color::Yellow() : raylib::Color::LightGray());
+	float heightTextWidth = mainFont.MeasureText(TextFormat("HEIGHT: < %i >", gameOptions.GridSize.y), optionTextSize, optionTextSize * BASE_FONT_SPACING).x;
+	mainFont.DrawText(TextFormat("HEIGHT: < %i >", gameOptions.GridSize.y), raylib::Vector2(screenWidth / 2.0f - heightTextWidth / 2.0f, screenHeight / 2.0f + optionTextSize * 3 - optionTextSize / 2.0f), optionTextSize, optionTextSize * BASE_FONT_SPACING, menuButtonIndex == 3 ? raylib::Color::Yellow() : raylib::Color::LightGray());
 
 	//Show ghost piece
 	std::string ghostPieceText = "GHOST PIECE: ";
@@ -1220,7 +1216,7 @@ void SceneGame::DrawControlsMenu()
 	backgroundColor.DrawRectangle(0, 0, screenWidth, screenHeight);
 
 	//Icon
-	float iconScale = (1.0f + (sinf(gameWindow.GetTime())) * 0.05f) * aspectScale;
+	float iconScale = (1.0f + (sinf((float)gameWindow.GetTime())) * 0.05f) * aspectScale;
 	raylib::Texture2D& iconTexture = GetTexture("Icon");
 	raylib::Rectangle iconSourceRect = raylib::Rectangle{ 0, 0, (float)iconTexture.width, (float)iconTexture.height };
 	iconTexture.Draw(iconSourceRect, raylib::Rectangle{ screenWidth / 2.0f, screenHeight / 2.0f - (float)iconTexture.height * iconScale, (float)iconTexture.width * iconScale, (float)iconTexture.height * iconScale }, { (float)iconTexture.width / 2.0f * iconScale, (float)iconTexture.height / 2.0f * iconScale }, 0.0f, raylib::Color::White());
@@ -1235,9 +1231,9 @@ void SceneGame::DrawControlsMenu()
 	{
 		std::string titleChar = std::string(1, titleText.at(i));
 
-		mainFont.DrawText(std::string(1, titleText.at(i)), raylib::Vector2(titleTextX, screenHeight / 2.0f - (float)iconTexture.height * iconScale * 1.5f - titleTextSize + sinf(gameWindow.GetTime() * 3.0f + i) * 4.0f * aspectScale), titleTextSize, titleTextSize * BASE_FONT_SPACING, raylib::Color::FromHSV(Wrap(gameWindow.GetTime() * 120.0f + 30.0f * i, 0.0f, 360.0f), 1.0f, 1.0f));
+		mainFont.DrawText(std::string(1, titleText.at(i)), raylib::Vector2(titleTextX, screenHeight / 2.0f - (float)iconTexture.height * iconScale * 1.5f - titleTextSize + sinf((float)gameWindow.GetTime() * 3.0f + (float)i) * 4.0f * aspectScale), titleTextSize, titleTextSize * BASE_FONT_SPACING, raylib::Color::FromHSV(Wrap((float)gameWindow.GetTime() * 120.0f + 30.0f * i, 0.0f, 360.0f), 1.0f, 1.0f));
 
-		int titleCharWidth = raylib::MeasureText(titleChar, titleTextSize);
+		float titleCharWidth = mainFont.MeasureText(titleChar, titleTextSize, titleTextSize * BASE_FONT_SPACING).x;
 		titleTextX += titleCharWidth + (titleTextSize / 10);
 	}
 
@@ -1250,7 +1246,7 @@ void SceneGame::DrawControlsMenu()
 	//Draw every line aligned along the center of the screen
 	while (controlsText != "")
 	{
-		int endLineIndex = controlsText.find('\n', 0);
+		int endLineIndex = (int)controlsText.find('\n', 0);
 
 		std::string controlText = "";
 		
@@ -1299,7 +1295,7 @@ void SceneGame::DrawCreditsMenu()
 	backgroundColor.DrawRectangle(0, 0, screenWidth, screenHeight);
 
 	//Icon
-	float iconScale = (1.0f + (sinf(gameWindow.GetTime())) * 0.05f) * aspectScale;
+	float iconScale = (1.0f + (sinf((float)gameWindow.GetTime())) * 0.05f) * aspectScale;
 	raylib::Texture2D& iconTexture = GetTexture("Icon");
 	raylib::Rectangle iconSourceRect = raylib::Rectangle{ 0, 0, (float)iconTexture.width, (float)iconTexture.height };
 	iconTexture.Draw(iconSourceRect, raylib::Rectangle{ screenWidth / 2.0f, screenHeight / 2.0f - (float)iconTexture.height * iconScale, (float)iconTexture.width * iconScale, (float)iconTexture.height * iconScale }, { (float)iconTexture.width / 2.0f * iconScale, (float)iconTexture.height / 2.0f * iconScale }, 0.0f, raylib::Color::White());
@@ -1314,15 +1310,15 @@ void SceneGame::DrawCreditsMenu()
 	{
 		std::string titleChar = std::string(1, titleText.at(i));
 
-		mainFont.DrawText(std::string(1, titleText.at(i)), raylib::Vector2(titleTextX, screenHeight / 2.0f - (float)iconTexture.height * iconScale * 1.5f - titleTextSize + sinf(gameWindow.GetTime() * 3.0f + i) * 4.0f * aspectScale), titleTextSize, titleTextSize * BASE_FONT_SPACING, raylib::Color::FromHSV(Wrap(gameWindow.GetTime() * 120.0f + 30.0f * i, 0.0f, 360.0f), 1.0f, 1.0f));
+		mainFont.DrawText(std::string(1, titleText.at(i)), raylib::Vector2(titleTextX, screenHeight / 2.0f - (float)iconTexture.height * iconScale * 1.5f - titleTextSize + sinf((float)gameWindow.GetTime() * 3.0f + i) * 4.0f * aspectScale), titleTextSize, titleTextSize * BASE_FONT_SPACING, raylib::Color::FromHSV(Wrap((float)gameWindow.GetTime() * 120.0f + 30.0f * i, 0.0f, 360.0f), 1.0f, 1.0f));
 
-		int titleCharWidth = raylib::MeasureText(titleChar, titleTextSize);
+		float titleCharWidth = mainFont.MeasureText(titleChar, titleTextSize, titleTextSize * BASE_FONT_SPACING).x;
 		titleTextX += titleCharWidth + (titleTextSize / 10);
 	}
 
 	//music credits
-	//"Bleeping Demo", "Nowhere Land"
-	//Kevin MacLeod(incompetech.com)
+		//"Bleeping Demo", "Nowhere Land"
+		//Kevin MacLeod(incompetech.com)
 		//Licensed under Creative Commons : By Attribution 3.0
 		//http://creativecommons.org/licenses/by/3.0/
 

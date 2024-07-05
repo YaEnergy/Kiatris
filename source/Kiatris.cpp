@@ -87,6 +87,7 @@ class Game
 			
 			icon.Unload();
 			UnloadAssets();
+
 			//window, audio device are closed and unloaded automatically
 		}
 };
