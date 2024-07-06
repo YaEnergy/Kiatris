@@ -58,6 +58,7 @@ class SceneGame : public Scene
 		//Gameplay
 		void StartGame();
 		void UpdateGameplay();
+		void UpdatePieceRotation();
 		void UpdatePieceMovement();
 		void UpdatePieceGravity();
 		void LineClearCheck(int topY, int bottomY);

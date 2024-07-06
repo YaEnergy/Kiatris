@@ -203,6 +203,7 @@ void SceneGame::UpdateGameplay()
 
 	lineClearTimeSeconds = std::max(1.0f - 0.1f * level, 0.1f);
 
+	UpdatePieceRotation();
 	UpdatePieceMovement();
 
 	if (IsConfirmButtonPressed())
@@ -219,7 +220,7 @@ void SceneGame::UpdateGameplay()
 		UpdatePieceGravity();
 }
 
-void SceneGame::UpdatePieceMovement()
+void SceneGame::UpdatePieceRotation()
 {
 	Piece piece = currentPiece;
 
@@ -230,28 +231,44 @@ void SceneGame::UpdatePieceMovement()
 		piece = piece.GetClockwiseRotation(); //Clockwise
 	else if (IsKeyPressed(KEY_T))
 		piece = piece.GetHalfCircleRotation();
+	else
+		return;
 
+	//If rotated piece can exist here, set current piece to rotated form of current piece
+	if (CanPieceExistAt(piece, currentPiecePosition))
+		currentPiece = piece;
+}
+
+void SceneGame::UpdatePieceMovement()
+{
 	//movement
 	Vector2Int movement = { 0, 0 };
-	const float movePieceTime = 1.0f / 5.0f;
+	const float movePieceTime = 1.0f / 10.0f;
 
 	if (IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_D))
 	{
-		if (IsKeyPressed(KEY_RIGHT) || IsKeyPressed(KEY_D))
-			movementPieceDeltaTime = movePieceTime;
-
 		movement.x = 1;
 
+		if (IsKeyPressed(KEY_RIGHT) || IsKeyPressed(KEY_D))
+		{
+			if (CanPieceExistAt(currentPiece, Vector2Int{ currentPiecePosition.x + 1, currentPiecePosition.y }))
+				currentPiecePosition = Vector2Int{ currentPiecePosition.x + 1, currentPiecePosition.y };
+
+			movementPieceDeltaTime = -movePieceTime; //extra delay before repeated movements
+		}
 	}
 	else if (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A))
 	{
-		if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_A))
-			movementPieceDeltaTime = movePieceTime;
-
 		movement.x = -1;
-	}
 
-	bool positionSuccess = false;
+		if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_A))
+		{
+			if (CanPieceExistAt(currentPiece, Vector2Int{currentPiecePosition.x - 1, currentPiecePosition.y}))
+				currentPiecePosition = Vector2Int{ currentPiecePosition.x - 1, currentPiecePosition.y };
+
+			movementPieceDeltaTime = -movePieceTime; //extra delay before repeated movements
+		}
+	}
 
 	if ((IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A) || IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_D)) && movementPieceDeltaTime >= movePieceTime)
 	{
@@ -261,21 +278,12 @@ void SceneGame::UpdatePieceMovement()
 
 			Vector2Int newPiecePosition = { currentPiecePosition.x + movement.x, currentPiecePosition.y + movement.y };
 
-			if (CanPieceExistAt(piece, newPiecePosition))
-			{
+			if (CanPieceExistAt(currentPiece, newPiecePosition))
 				currentPiecePosition = newPiecePosition;
-				positionSuccess = true;
-			}
 			else
 				break;
 		}
 	}
-	else
-		positionSuccess = CanPieceExistAt(piece, currentPiecePosition);
-
-	//if new position is successful
-	if (positionSuccess) //for rotations
-		currentPiece = piece;
 }
 
 void SceneGame::UpdatePieceGravity()
