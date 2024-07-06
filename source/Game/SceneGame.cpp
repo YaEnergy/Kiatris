@@ -234,9 +234,44 @@ void SceneGame::UpdatePieceRotation()
 	else
 		return;
 
-	//If rotated piece can exist here, set current piece to rotated form of current piece
+	//If rotated piece can exist here, set current piece to rotated form of current piece without moving it
 	if (CanPieceExistAt(piece, currentPiecePosition))
+	{
 		currentPiece = piece;
+		return;
+	}
+
+	//Slightly move the piece if necessary and possible, allowing for rotation when near the border or other blocks without getting stuck
+	//The amount of blocks that the piece needs to be moved depends on 
+	//how many columns (x) contained in non-empty spots if the piece had been rotated without being moved at all
+
+	int leftNonEmptyX = INT32_MAX;
+	int rightNonEmptyX = INT32_MIN;
+
+	for (int i = 0; i < piece.numBlocks; i++)
+	{
+		if (IsCellEmpty(currentPiecePosition.x + piece.blockOffsets[i].x, currentPiecePosition.y + piece.blockOffsets[i].y))
+			continue;
+
+		if (piece.blockOffsets[i].x < leftNonEmptyX)
+			leftNonEmptyX = piece.blockOffsets[i].x;
+		
+		if (piece.blockOffsets[i].x > rightNonEmptyX)
+			rightNonEmptyX = piece.blockOffsets[i].x;
+	}
+
+	int nonEmptyWidth = abs(leftNonEmptyX - rightNonEmptyX) + 1;
+
+	if (CanPieceExistAt(piece, Vector2Int{currentPiecePosition.x - nonEmptyWidth, currentPiecePosition.y}))
+	{
+		currentPiecePosition = Vector2Int{ currentPiecePosition.x - nonEmptyWidth, currentPiecePosition.y };
+		currentPiece = piece;
+	}
+	else if (CanPieceExistAt(piece, Vector2Int{ currentPiecePosition.x + nonEmptyWidth, currentPiecePosition.y }))
+	{
+		currentPiecePosition = Vector2Int{ currentPiecePosition.x + nonEmptyWidth, currentPiecePosition.y };
+		currentPiece = piece;
+	}
 }
 
 void SceneGame::UpdatePieceMovement()
