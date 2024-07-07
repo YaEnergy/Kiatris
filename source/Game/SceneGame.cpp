@@ -220,143 +220,6 @@ void SceneGame::UpdateGameplay()
 		UpdatePieceGravity();
 }
 
-void SceneGame::UpdatePieceRotation()
-{
-	Piece piece = currentPiece;
-
-	//rotation
-	if (IsKeyPressed(KEY_LEFT_CONTROL) || IsKeyPressed(KEY_RIGHT_CONTROL) || IsKeyPressed(KEY_Z) || IsKeyPressed(KEY_E))
-		piece = piece.GetCounterClockwiseRotation(); //Counter-clockwise
-	else if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_X) || IsKeyPressed(KEY_R) || IsKeyPressed(KEY_W))
-		piece = piece.GetClockwiseRotation(); //Clockwise
-	else if (IsKeyPressed(KEY_T))
-		piece = piece.GetHalfCircleRotation();
-	else
-		return;
-
-	//If rotated piece can exist here, set current piece to rotated form of current piece without moving it
-	if (CanPieceExistAt(piece, currentPiecePosition))
-	{
-		currentPiece = piece;
-		return;
-	}
-
-	//Slightly move the piece if necessary and possible, allowing for rotation when near the border or other blocks without getting stuck
-	//The amount of blocks that the piece needs to be moved depends on 
-	//how many columns (x) contained in non-empty spots if the piece had been rotated without being moved at all
-
-	int leftNonEmptyX = INT32_MAX;
-	int rightNonEmptyX = INT32_MIN;
-
-	for (int i = 0; i < piece.numBlocks; i++)
-	{
-		if (IsCellEmpty(currentPiecePosition.x + piece.blockOffsets[i].x, currentPiecePosition.y + piece.blockOffsets[i].y))
-			continue;
-
-		if (piece.blockOffsets[i].x < leftNonEmptyX)
-			leftNonEmptyX = piece.blockOffsets[i].x;
-		
-		if (piece.blockOffsets[i].x > rightNonEmptyX)
-			rightNonEmptyX = piece.blockOffsets[i].x;
-	}
-
-	int nonEmptyWidth = abs(leftNonEmptyX - rightNonEmptyX) + 1;
-
-	if (CanPieceExistAt(piece, Vector2Int{currentPiecePosition.x - nonEmptyWidth, currentPiecePosition.y}))
-	{
-		currentPiecePosition = Vector2Int{ currentPiecePosition.x - nonEmptyWidth, currentPiecePosition.y };
-		currentPiece = piece;
-	}
-	else if (CanPieceExistAt(piece, Vector2Int{ currentPiecePosition.x + nonEmptyWidth, currentPiecePosition.y }))
-	{
-		currentPiecePosition = Vector2Int{ currentPiecePosition.x + nonEmptyWidth, currentPiecePosition.y };
-		currentPiece = piece;
-	}
-}
-
-void SceneGame::UpdatePieceMovement()
-{
-	//movement
-	Vector2Int movement = { 0, 0 };
-	const float movePieceTime = 1.0f / 10.0f;
-
-	if (IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_D))
-	{
-		movement.x = 1;
-
-		if (IsKeyPressed(KEY_RIGHT) || IsKeyPressed(KEY_D))
-		{
-			if (CanPieceExistAt(currentPiece, Vector2Int{ currentPiecePosition.x + 1, currentPiecePosition.y }))
-				currentPiecePosition = Vector2Int{ currentPiecePosition.x + 1, currentPiecePosition.y };
-
-			movementPieceDeltaTime = -movePieceTime; //extra delay before repeated movements
-		}
-	}
-	else if (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A))
-	{
-		movement.x = -1;
-
-		if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_A))
-		{
-			if (CanPieceExistAt(currentPiece, Vector2Int{currentPiecePosition.x - 1, currentPiecePosition.y}))
-				currentPiecePosition = Vector2Int{ currentPiecePosition.x - 1, currentPiecePosition.y };
-
-			movementPieceDeltaTime = -movePieceTime; //extra delay before repeated movements
-		}
-	}
-
-	if ((IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A) || IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_D)) && movementPieceDeltaTime >= movePieceTime)
-	{
-		while (movementPieceDeltaTime >= movePieceTime)
-		{
-			movementPieceDeltaTime -= movePieceTime;
-
-			Vector2Int newPiecePosition = { currentPiecePosition.x + movement.x, currentPiecePosition.y + movement.y };
-
-			if (CanPieceExistAt(currentPiece, newPiecePosition))
-				currentPiecePosition = newPiecePosition;
-			else
-				break;
-		}
-	}
-}
-
-void SceneGame::UpdatePieceGravity()
-{
-	if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S))
-		gravityPieceDeltaTime = 1.0f / 20.0f;
-
-	int gravityLevel = std::min(level - 1, 14);
-
-	float gravityMovementTime = (float)std::pow(0.8f - ((float)gravityLevel * 0.007f), (float)gravityLevel);
-
-	//Soft drop speed
-	if ((IsKeyDown(KEY_DOWN) || IsKeyDown(KEY_S)) && gravityMovementTime > 1.0f / 20.0f)
-		gravityMovementTime = 1.0f / 20.0f;
-
-	while (gravityPieceDeltaTime >= gravityMovementTime)
-	{
-		gravityPieceDeltaTime -= gravityMovementTime;
-
-		if (CanPieceExistAt(currentPiece, { currentPiecePosition.x, currentPiecePosition.y + 1 }))
-		{
-			currentPiecePosition = { currentPiecePosition.x, currentPiecePosition.y + 1 };
-
-			//plus one point for each cell dropped with soft drop
-			if (IsKeyDown(KEY_DOWN))
-				score += 1;
-		}
-		else
-		{
-			PlacePiece();
-			break;
-		}
-	}
-
-	if (!CanPieceExistAt(currentPiece, currentPiecePosition))
-		EndGame();
-}
-
 void SceneGame::LineClearCheck(int topY, int bottomY)
 {
 	//check affected lines
@@ -456,6 +319,13 @@ void SceneGame::DrawGame()
 	raylib::Texture2D& blockTexture = GetTexture("BlockPiece");
 	raylib::Rectangle blockTextureSource = { 0.0f, 0.0f, (float)blockTexture.width, (float)blockTexture.height };
 
+	raylib::Color borderColor = raylib::Color::FromHSV(45.0f * (level - 1) - sinf((float)gameWindow.GetTime()) * 5.0f + 221.0f, 1.0f, 1.0f);
+
+	if (gameOver)
+		borderColor = (Wrap((float)gameWindow.GetTime(), 0.0f, 0.5f) < 0.25f || !gameOptions.EnableStrobingLights) ? raylib::Color::Red() : borderColor;
+	else if (isClearingLines)
+		borderColor = raylib::Color(255 - borderColor.r, 255 - borderColor.g, 255 - borderColor.b, borderColor.a);
+
 	//Background
 	blockTexture.Draw(raylib::Rectangle(Wrap((float)windowTime, 0.0f, 1.0f) * (float)blockTexture.width, Wrap((float)windowTime, 0.0f, 1.0f) * (float)blockTexture.height, (float)screenWidth / 1.5f, (float)screenHeight / 1.5f), { 0, 0, (float)screenWidth, (float)screenHeight }, { 0, 0 }, 0.0f, mainColor.Brightness(0.2f));
 
@@ -481,6 +351,21 @@ void SceneGame::DrawGame()
 
 	//Grid background
 	raylib::Rectangle(gridX, fieldY, gridSize.x, gridSize.y).Draw(gridBackgroundColor);
+
+	//Grid lines
+	float aspectScale = std::min((float)fieldSize.x / DESIGN_WIDTH, (float)fieldSize.y / DESIGN_HEIGHT);
+
+	//Horizontal grid lines
+	for (int y = 1; y < gameOptions.GridSize.y; y++)
+	{
+		borderColor.Alpha(0.2f).DrawLine(Vector2{gridX, fieldY + y * blockSize}, Vector2{gridX + gridSize.x, fieldY + y * blockSize}, (int)(3.0f * aspectScale));
+	}
+
+	//Vertical grid lines
+	for (int x = 1; x < gameOptions.GridSize.x; x++)
+	{
+		borderColor.Alpha(0.2f).DrawLine(Vector2{gridX + x * blockSize, fieldY}, Vector2{gridX + x * blockSize, fieldY + gridSize.y}, (int)(3.0f * aspectScale));
+	}
 
 	DrawGrid(gridX, fieldY, blockSize, blockTexture);
 
@@ -526,6 +411,22 @@ void SceneGame::DrawGame()
 
 	mainFont.DrawText(holdText, raylib::Vector2(gridX - (UI_PIECE_LENGTH - 0.5f) * blockSize, fieldY), holdTextFontSize, holdTextFontSize * BASE_FONT_SPACING, hasSwitchedPiece ? raylib::Color::Red() : raylib::Color::White());
 
+	//Held grid lines
+
+	//Horizontal grid lines
+	for (int y = 0; y <= UI_PIECE_LENGTH; y++)
+	{
+		raylib::Color holdGridLineColor = hasSwitchedPiece ? raylib::Color::Red() : borderColor;
+		holdGridLineColor.Alpha(y % (UI_PIECE_LENGTH) == 0 ? 0.6f : 0.2f).DrawLine(Vector2{ fieldX, fieldY + holdTextFontSize + y * blockSize }, Vector2{ fieldX + blockSize * UI_PIECE_LENGTH, fieldY + holdTextFontSize + y * blockSize }, (int)(3.0f * aspectScale));
+	}
+
+	//Vertical grid lines
+	for (int x = 1; x < UI_PIECE_LENGTH; x++)
+	{
+		raylib::Color holdGridLineColor = hasSwitchedPiece ? raylib::Color::Red() : borderColor;
+		holdGridLineColor.Alpha(0.2f).DrawLine(Vector2{ fieldX + x * blockSize, fieldY + holdTextFontSize }, Vector2{ fieldX + x * blockSize, fieldY + holdHeight }, (int)(3.0f * aspectScale));
+	}
+
 	float holdPieceStartX = gridX - 4 * blockSize;
 	for (int i = 0; i < holdingPiece.numBlocks; i++)
 	{
@@ -539,15 +440,29 @@ void SceneGame::DrawGame()
 	float nextTextFontSize = FitTextWidth(mainFont, nextText, (UI_PIECE_LENGTH - 1.0f) * blockSize, BASE_FONT_SPACING);
 	float nextTextWidth = mainFont.MeasureText(nextText, nextTextFontSize, nextTextFontSize * BASE_FONT_SPACING).x;
 
-	float nextHeight = blockSize * (UI_PIECE_LENGTH + 1) * gameOptions.NumUpAndComingPieces - blockSize + nextTextFontSize;
+	float nextHeight = blockSize * (UI_PIECE_LENGTH) * gameOptions.NumUpAndComingPieces + nextTextFontSize;//blockSize * (UI_PIECE_LENGTH + 1) * gameOptions.NumUpAndComingPieces - blockSize + nextTextFontSize;
 	gridBackgroundColor.DrawRectangle({ gridX + gridSize.x, fieldY, blockSize * UI_PIECE_LENGTH, nextHeight });
 
 	mainFont.DrawText(nextText, raylib::Vector2(gridX + gridSize.x + 0.5f * blockSize, fieldY), nextTextFontSize, nextTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
 
+	//Next grid lines
+
+	//Horizontal grid lines
+	for (int y = 0; y < 3 * UI_PIECE_LENGTH; y++)
+	{
+		borderColor.Alpha(y % (UI_PIECE_LENGTH) == 0 ? 0.6f : 0.2f).DrawLine(Vector2{gridX + gridSize.x, fieldY + nextTextFontSize + y * blockSize}, Vector2{gridX + gridSize.x + blockSize * UI_PIECE_LENGTH, fieldY + nextTextFontSize + y * blockSize}, (int)(3.0f * aspectScale));
+	}
+
+	//Vertical grid lines
+	for (int x = 1; x < UI_PIECE_LENGTH; x++)
+	{
+		borderColor.Alpha(0.2f).DrawLine(Vector2{ gridX + gridSize.x + x * blockSize, fieldY + nextTextFontSize }, Vector2{ gridX + gridSize.x + x * blockSize, fieldY + nextHeight }, (int)(3.0f * aspectScale));
+	}
+
 	float nextPieceStartX = gridX + gridSize.x;
 	for (int pieceIndex = 0; pieceIndex < gameOptions.NumUpAndComingPieces; pieceIndex++)
 	{
-		float pieceStartY = fieldY + nextTextFontSize + ((UI_PIECE_LENGTH + 1) * blockSize) * (pieceIndex);
+		float pieceStartY = fieldY + nextTextFontSize + ((UI_PIECE_LENGTH) * blockSize) * (pieceIndex);//fieldY + nextTextFontSize + ((UI_PIECE_LENGTH + 1) * blockSize) * (pieceIndex);
 
 		for (int i = 0; i < upAndComingPieces[pieceIndex].numBlocks; i++)
 		{
@@ -588,13 +503,6 @@ void SceneGame::DrawGame()
 	mainFont.DrawText(TextFormat("%03.0f", timePlayingSeconds), raylib::Vector2(fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize * 7 + statPanelHeightPadding), statTextFontSize, statTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
 
 	//Borders
-	raylib::Color borderColor = raylib::Color::FromHSV(45.0f * (level - 1) - sinf((float)gameWindow.GetTime()) * 5.0f + 221.0f, 1.0f, 1.0f);;
-	
-	if (gameOver)
-		borderColor = (Wrap((float)gameWindow.GetTime(), 0.0f, 0.5f) < 0.25f || !gameOptions.EnableStrobingLights) ? raylib::Color::Red() : borderColor;
-	else if (isClearingLines)
-		borderColor = raylib::Color(255 - borderColor.r, 255 - borderColor.g, 255 - borderColor.b, borderColor.a);
-
 	float borderThickness = 6.0f * std::min((float)fieldSize.x / DESIGN_WIDTH, (float)fieldSize.y / DESIGN_HEIGHT);
 
 	borderColor.DrawLine({ gridX, fieldY }, { gridX, fieldY + gridSize.y }, borderThickness);
@@ -747,6 +655,143 @@ void SceneGame::HardDropPiece()
 	score += cellsMoved * 2;
 
 	std::cout << "Hard drop piece (" + std::to_string(cellsMoved) + " cells, +" + std::to_string(cellsMoved * 2) + " points)" << std::endl;
+}
+
+void SceneGame::UpdatePieceRotation()
+{
+	Piece piece = currentPiece;
+
+	//rotation
+	if (IsKeyPressed(KEY_LEFT_CONTROL) || IsKeyPressed(KEY_RIGHT_CONTROL) || IsKeyPressed(KEY_Z) || IsKeyPressed(KEY_E))
+		piece = piece.GetCounterClockwiseRotation(); //Counter-clockwise
+	else if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_X) || IsKeyPressed(KEY_R) || IsKeyPressed(KEY_W))
+		piece = piece.GetClockwiseRotation(); //Clockwise
+	else if (IsKeyPressed(KEY_T))
+		piece = piece.GetHalfCircleRotation();
+	else
+		return;
+
+	//If rotated piece can exist here, set current piece to rotated form of current piece without moving it
+	if (CanPieceExistAt(piece, currentPiecePosition))
+	{
+		currentPiece = piece;
+		return;
+	}
+
+	//Slightly move the piece if necessary and possible, allowing for rotation when near the border or other blocks without getting stuck
+	//The amount of blocks that the piece needs to be moved depends on 
+	//how many columns (x) contained in non-empty spots if the piece had been rotated without being moved at all
+
+	int leftNonEmptyX = INT32_MAX;
+	int rightNonEmptyX = INT32_MIN;
+
+	for (int i = 0; i < piece.numBlocks; i++)
+	{
+		if (IsCellEmpty(currentPiecePosition.x + piece.blockOffsets[i].x, currentPiecePosition.y + piece.blockOffsets[i].y))
+			continue;
+
+		if (piece.blockOffsets[i].x < leftNonEmptyX)
+			leftNonEmptyX = piece.blockOffsets[i].x;
+
+		if (piece.blockOffsets[i].x > rightNonEmptyX)
+			rightNonEmptyX = piece.blockOffsets[i].x;
+	}
+
+	int nonEmptyWidth = abs(leftNonEmptyX - rightNonEmptyX) + 1;
+
+	if (CanPieceExistAt(piece, Vector2Int{ currentPiecePosition.x - nonEmptyWidth, currentPiecePosition.y }))
+	{
+		currentPiecePosition = Vector2Int{ currentPiecePosition.x - nonEmptyWidth, currentPiecePosition.y };
+		currentPiece = piece;
+	}
+	else if (CanPieceExistAt(piece, Vector2Int{ currentPiecePosition.x + nonEmptyWidth, currentPiecePosition.y }))
+	{
+		currentPiecePosition = Vector2Int{ currentPiecePosition.x + nonEmptyWidth, currentPiecePosition.y };
+		currentPiece = piece;
+	}
+}
+
+void SceneGame::UpdatePieceMovement()
+{
+	//movement
+	Vector2Int movement = { 0, 0 };
+	const float movePieceTime = 1.0f / 10.0f;
+
+	if (IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_D))
+	{
+		movement.x = 1;
+
+		if (IsKeyPressed(KEY_RIGHT) || IsKeyPressed(KEY_D))
+		{
+			if (CanPieceExistAt(currentPiece, Vector2Int{ currentPiecePosition.x + 1, currentPiecePosition.y }))
+				currentPiecePosition = Vector2Int{ currentPiecePosition.x + 1, currentPiecePosition.y };
+
+			movementPieceDeltaTime = -movePieceTime; //extra delay before repeated movements
+		}
+	}
+	else if (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A))
+	{
+		movement.x = -1;
+
+		if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_A))
+		{
+			if (CanPieceExistAt(currentPiece, Vector2Int{ currentPiecePosition.x - 1, currentPiecePosition.y }))
+				currentPiecePosition = Vector2Int{ currentPiecePosition.x - 1, currentPiecePosition.y };
+
+			movementPieceDeltaTime = -movePieceTime; //extra delay before repeated movements
+		}
+	}
+
+	if ((IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A) || IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_D)) && movementPieceDeltaTime >= movePieceTime)
+	{
+		while (movementPieceDeltaTime >= movePieceTime)
+		{
+			movementPieceDeltaTime -= movePieceTime;
+
+			Vector2Int newPiecePosition = { currentPiecePosition.x + movement.x, currentPiecePosition.y + movement.y };
+
+			if (CanPieceExistAt(currentPiece, newPiecePosition))
+				currentPiecePosition = newPiecePosition;
+			else
+				break;
+		}
+	}
+}
+
+void SceneGame::UpdatePieceGravity()
+{
+	if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S))
+		gravityPieceDeltaTime = 1.0f / 20.0f;
+
+	int gravityLevel = std::min(level - 1, 14);
+
+	float gravityMovementTime = (float)std::pow(0.8f - ((float)gravityLevel * 0.007f), (float)gravityLevel);
+
+	//Soft drop speed
+	if ((IsKeyDown(KEY_DOWN) || IsKeyDown(KEY_S)) && gravityMovementTime > 1.0f / 20.0f)
+		gravityMovementTime = 1.0f / 20.0f;
+
+	while (gravityPieceDeltaTime >= gravityMovementTime)
+	{
+		gravityPieceDeltaTime -= gravityMovementTime;
+
+		if (CanPieceExistAt(currentPiece, { currentPiecePosition.x, currentPiecePosition.y + 1 }))
+		{
+			currentPiecePosition = { currentPiecePosition.x, currentPiecePosition.y + 1 };
+
+			//plus one point for each cell dropped with soft drop
+			if (IsKeyDown(KEY_DOWN))
+				score += 1;
+		}
+		else
+		{
+			PlacePiece();
+			break;
+		}
+	}
+
+	if (!CanPieceExistAt(currentPiece, currentPiecePosition))
+		EndGame();
 }
 
 #pragma endregion

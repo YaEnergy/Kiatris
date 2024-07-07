@@ -58,9 +58,6 @@ class SceneGame : public Scene
 		//Gameplay
 		void StartGame();
 		void UpdateGameplay();
-		void UpdatePieceRotation();
-		void UpdatePieceMovement();
-		void UpdatePieceGravity();
 		void LineClearCheck(int topY, int bottomY);
 		void UpdateGameOver();
 		void EndGame();
@@ -70,6 +67,7 @@ class SceneGame : public Scene
 
 		//Menus
 		void UpdateMenuButtonNagivation(int startIndex, int endIndex);
+
 		void UpdateTitleMenu();
 		void UpdateOptionsMenu();
 		void UpdateControlsMenu();
@@ -94,6 +92,10 @@ class SceneGame : public Scene
 		void PlacePiece();
 		void HoldPiece();
 		void HardDropPiece();
+
+		void UpdatePieceRotation();
+		void UpdatePieceMovement();
+		void UpdatePieceGravity();
 
 		//Grid
 
