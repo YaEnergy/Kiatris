@@ -349,25 +349,27 @@ void SceneGame::DrawGame()
 	Vector2 gridSize = { blockSize * gameOptions.GridSize.x, blockSize * gameOptions.GridSize.y };
 	float gridX = ((float)screenWidth - gridSize.x) / 2.0f;
 
-	//Grid background
-	raylib::Rectangle(gridX, fieldY, gridSize.x, gridSize.y).Draw(gridBackgroundColor);
-
-	//Grid lines
 	float aspectScale = std::min((float)fieldSize.x / DESIGN_WIDTH, (float)fieldSize.y / DESIGN_HEIGHT);
 
-	//Horizontal grid lines
-	for (int y = 1; y < gameOptions.GridSize.y; y++)
+	//Drawing grid
 	{
-		borderColor.Alpha(0.2f).DrawLine(Vector2{gridX, fieldY + y * blockSize}, Vector2{gridX + gridSize.x, fieldY + y * blockSize}, (int)(3.0f * aspectScale));
-	}
+		//Grid background
+		raylib::Rectangle(gridX, fieldY, gridSize.x, gridSize.y).Draw(gridBackgroundColor);
 
-	//Vertical grid lines
-	for (int x = 1; x < gameOptions.GridSize.x; x++)
-	{
-		borderColor.Alpha(0.2f).DrawLine(Vector2{gridX + x * blockSize, fieldY}, Vector2{gridX + x * blockSize, fieldY + gridSize.y}, (int)(3.0f * aspectScale));
-	}
+		//Horizontal grid lines
+		for (int y = 1; y < gameOptions.GridSize.y; y++)
+		{
+			borderColor.Alpha(0.2f).DrawLine(Vector2{gridX, fieldY + y * blockSize}, Vector2{gridX + gridSize.x, fieldY + y * blockSize}, (int)(3.0f * aspectScale));
+		}
 
-	DrawGrid(gridX, fieldY, blockSize, blockTexture);
+		//Vertical grid lines
+		for (int x = 1; x < gameOptions.GridSize.x; x++)
+		{
+			borderColor.Alpha(0.2f).DrawLine(Vector2{gridX + x * blockSize, fieldY}, Vector2{gridX + x * blockSize, fieldY + gridSize.y}, (int)(3.0f * aspectScale));
+		}
+
+		DrawGrid(gridX, fieldY, blockSize, blockTexture);
+	}
 
 	//Draw pause overlay if paused
 	if (gamePaused)
@@ -404,122 +406,138 @@ void SceneGame::DrawGame()
 	//held piece
 	std::string holdText = "HELD";
 	float holdTextFontSize = FitTextWidth(mainFont, holdText, (UI_PIECE_LENGTH - 1.0f) * blockSize, BASE_FONT_SPACING);
-	float holdTextWidth = mainFont.MeasureText(holdText, holdTextFontSize, holdTextFontSize / 10.0f).x;
 
 	float holdHeight = blockSize * UI_PIECE_LENGTH + holdTextFontSize;
-	gridBackgroundColor.DrawRectangle({ fieldX, fieldY, blockSize * UI_PIECE_LENGTH, holdHeight });
 
-	mainFont.DrawText(holdText, raylib::Vector2(gridX - (UI_PIECE_LENGTH - 0.5f) * blockSize, fieldY), holdTextFontSize, holdTextFontSize * BASE_FONT_SPACING, hasSwitchedPiece ? raylib::Color::Red() : raylib::Color::White());
-
-	//Held grid lines
-
-	//Horizontal grid lines
-	for (int y = 0; y <= UI_PIECE_LENGTH; y++)
+	//Drawing held piece
 	{
-		raylib::Color holdGridLineColor = hasSwitchedPiece ? raylib::Color::Red() : borderColor;
-		holdGridLineColor.Alpha(y % (UI_PIECE_LENGTH) == 0 ? 0.6f : 0.2f).DrawLine(Vector2{ fieldX, fieldY + holdTextFontSize + y * blockSize }, Vector2{ fieldX + blockSize * UI_PIECE_LENGTH, fieldY + holdTextFontSize + y * blockSize }, (int)(3.0f * aspectScale));
-	}
+		gridBackgroundColor.DrawRectangle({ fieldX, fieldY, blockSize * UI_PIECE_LENGTH, holdHeight });
 
-	//Vertical grid lines
-	for (int x = 1; x < UI_PIECE_LENGTH; x++)
-	{
-		raylib::Color holdGridLineColor = hasSwitchedPiece ? raylib::Color::Red() : borderColor;
-		holdGridLineColor.Alpha(0.2f).DrawLine(Vector2{ fieldX + x * blockSize, fieldY + holdTextFontSize }, Vector2{ fieldX + x * blockSize, fieldY + holdHeight }, (int)(3.0f * aspectScale));
-	}
+		float holdTextWidth = mainFont.MeasureText(holdText, holdTextFontSize, holdTextFontSize / 10.0f).x;
+		mainFont.DrawText(holdText, raylib::Vector2(gridX - (UI_PIECE_LENGTH - 0.5f) * blockSize, fieldY), holdTextFontSize, holdTextFontSize * BASE_FONT_SPACING, hasSwitchedPiece ? raylib::Color::Red() : raylib::Color::White());
 
-	float holdPieceStartX = gridX - 4 * blockSize;
-	for (int i = 0; i < holdingPiece.numBlocks; i++)
-	{
-		raylib::Rectangle rect = { holdPieceStartX + blockSize * (holdingPiece.blockOffsets[i].x + 1), fieldY + holdTextFontSize + blockSize * (holdingPiece.blockOffsets[i].y + 1), blockSize, blockSize };
+		//Held grid lines
 
-		blockTexture.Draw(blockTextureSource, rect, { 0.0f, 0.0f }, 0.0f, hasSwitchedPiece ? holdingPiece.blockColors[i].Alpha(0.5f) : holdingPiece.blockColors[i]);
+		//Horizontal grid lines
+		for (int y = 0; y <= UI_PIECE_LENGTH; y++)
+		{
+			raylib::Color holdGridLineColor = hasSwitchedPiece ? raylib::Color::Red() : borderColor;
+			holdGridLineColor.Alpha(y % (UI_PIECE_LENGTH) == 0 ? 0.6f : 0.2f).DrawLine(Vector2{ fieldX, fieldY + holdTextFontSize + y * blockSize }, Vector2{ fieldX + blockSize * UI_PIECE_LENGTH, fieldY + holdTextFontSize + y * blockSize }, (int)(3.0f * aspectScale));
+		}
+
+		//Vertical grid lines
+		for (int x = 1; x < UI_PIECE_LENGTH; x++)
+		{
+			raylib::Color holdGridLineColor = hasSwitchedPiece ? raylib::Color::Red() : borderColor;
+			holdGridLineColor.Alpha(0.2f).DrawLine(Vector2{ fieldX + x * blockSize, fieldY + holdTextFontSize }, Vector2{ fieldX + x * blockSize, fieldY + holdHeight }, (int)(3.0f * aspectScale));
+		}
+
+		float holdPieceStartX = gridX - 4 * blockSize;
+		for (int i = 0; i < holdingPiece.numBlocks; i++)
+		{
+			raylib::Rectangle rect = { holdPieceStartX + blockSize * (holdingPiece.blockOffsets[i].x + 1), fieldY + holdTextFontSize + blockSize * (holdingPiece.blockOffsets[i].y + 1), blockSize, blockSize };
+
+			blockTexture.Draw(blockTextureSource, rect, { 0.0f, 0.0f }, 0.0f, hasSwitchedPiece ? holdingPiece.blockColors[i].Alpha(0.5f) : holdingPiece.blockColors[i]);
+		}
 	}
 
 	//up and coming pieces
 	std::string nextText = "NEXT";
 	float nextTextFontSize = FitTextWidth(mainFont, nextText, (UI_PIECE_LENGTH - 1.0f) * blockSize, BASE_FONT_SPACING);
-	float nextTextWidth = mainFont.MeasureText(nextText, nextTextFontSize, nextTextFontSize * BASE_FONT_SPACING).x;
 
-	float nextHeight = blockSize * (UI_PIECE_LENGTH) * gameOptions.NumUpAndComingPieces + nextTextFontSize;//blockSize * (UI_PIECE_LENGTH + 1) * gameOptions.NumUpAndComingPieces - blockSize + nextTextFontSize;
-	gridBackgroundColor.DrawRectangle({ gridX + gridSize.x, fieldY, blockSize * UI_PIECE_LENGTH, nextHeight });
+	float nextHeight = blockSize * (UI_PIECE_LENGTH) * gameOptions.NumUpAndComingPieces + nextTextFontSize;
 
-	mainFont.DrawText(nextText, raylib::Vector2(gridX + gridSize.x + 0.5f * blockSize, fieldY), nextTextFontSize, nextTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
-
-	//Next grid lines
-
-	//Horizontal grid lines
-	for (int y = 0; y < 3 * UI_PIECE_LENGTH; y++)
+	//Drawing next pieces
 	{
-		borderColor.Alpha(y % (UI_PIECE_LENGTH) == 0 ? 0.6f : 0.2f).DrawLine(Vector2{gridX + gridSize.x, fieldY + nextTextFontSize + y * blockSize}, Vector2{gridX + gridSize.x + blockSize * UI_PIECE_LENGTH, fieldY + nextTextFontSize + y * blockSize}, (int)(3.0f * aspectScale));
-	}
+		gridBackgroundColor.DrawRectangle({ gridX + gridSize.x, fieldY, blockSize * UI_PIECE_LENGTH, nextHeight });
 
-	//Vertical grid lines
-	for (int x = 1; x < UI_PIECE_LENGTH; x++)
-	{
-		borderColor.Alpha(0.2f).DrawLine(Vector2{ gridX + gridSize.x + x * blockSize, fieldY + nextTextFontSize }, Vector2{ gridX + gridSize.x + x * blockSize, fieldY + nextHeight }, (int)(3.0f * aspectScale));
-	}
+		float nextTextWidth = mainFont.MeasureText(nextText, nextTextFontSize, nextTextFontSize * BASE_FONT_SPACING).x;
+		mainFont.DrawText(nextText, raylib::Vector2(gridX + gridSize.x + 0.5f * blockSize, fieldY), nextTextFontSize, nextTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
 
-	float nextPieceStartX = gridX + gridSize.x;
-	for (int pieceIndex = 0; pieceIndex < gameOptions.NumUpAndComingPieces; pieceIndex++)
-	{
-		float pieceStartY = fieldY + nextTextFontSize + ((UI_PIECE_LENGTH) * blockSize) * (pieceIndex);//fieldY + nextTextFontSize + ((UI_PIECE_LENGTH + 1) * blockSize) * (pieceIndex);
+		//Next grid lines
 
-		for (int i = 0; i < upAndComingPieces[pieceIndex].numBlocks; i++)
+		//Horizontal grid lines
+		for (int y = 0; y < 3 * UI_PIECE_LENGTH; y++)
 		{
-			raylib::Rectangle rect = { nextPieceStartX + blockSize * (upAndComingPieces[pieceIndex].blockOffsets[i].x + 1), pieceStartY + blockSize * (upAndComingPieces[pieceIndex].blockOffsets[i].y + 1), blockSize, blockSize };
-
-			blockTexture.Draw(blockTextureSource, rect, { 0.0f, 0.0f }, 0.0f, upAndComingPieces[pieceIndex].blockColors[i]);
+			borderColor.Alpha(y % (UI_PIECE_LENGTH) == 0 ? 0.6f : 0.2f).DrawLine(Vector2{gridX + gridSize.x, fieldY + nextTextFontSize + y * blockSize}, Vector2{gridX + gridSize.x + blockSize * UI_PIECE_LENGTH, fieldY + nextTextFontSize + y * blockSize}, (int)(3.0f * aspectScale));
 		}
+
+		//Vertical grid lines
+		for (int x = 1; x < UI_PIECE_LENGTH; x++)
+		{
+			borderColor.Alpha(0.2f).DrawLine(Vector2{ gridX + gridSize.x + x * blockSize, fieldY + nextTextFontSize }, Vector2{ gridX + gridSize.x + x * blockSize, fieldY + nextHeight }, (int)(3.0f * aspectScale));
+		}
+
+		//Pieces
+		float nextPieceStartX = gridX + gridSize.x;
+		for (int pieceIndex = 0; pieceIndex < gameOptions.NumUpAndComingPieces; pieceIndex++)
+		{
+			float pieceStartY = fieldY + nextTextFontSize + UI_PIECE_LENGTH * blockSize * pieceIndex;
+
+			for (int i = 0; i < upAndComingPieces[pieceIndex].numBlocks; i++)
+			{
+				raylib::Rectangle rect = { nextPieceStartX + blockSize * (upAndComingPieces[pieceIndex].blockOffsets[i].x + 1), pieceStartY + blockSize * (upAndComingPieces[pieceIndex].blockOffsets[i].y + 1), blockSize, blockSize };
+
+				blockTexture.Draw(blockTextureSource, rect, { 0.0f, 0.0f }, 0.0f, upAndComingPieces[pieceIndex].blockColors[i]);
+			}
+		}
+
 	}
 
 	//Statistics
 	int statPanelHeightPadding = 10;
 	float statTextFontSize = FitTextWidth(mainFont, "AAAAA", (UI_PIECE_LENGTH - 1.0f) * blockSize, BASE_FONT_SPACING);
 
-	gridBackgroundColor.DrawRectangle({ fieldX, fieldY + holdHeight, blockSize * UI_PIECE_LENGTH, statTextFontSize * 8.0f + statPanelHeightPadding * 2.0f });
+	//Drawing statPanel
+	{
+		gridBackgroundColor.DrawRectangle({ fieldX, fieldY + holdHeight, blockSize * UI_PIECE_LENGTH, statTextFontSize * 8.0f + statPanelHeightPadding * 2.0f });
 	
-	//Score
-	std::string scoreText = "SCORE";
-	mainFont.DrawText(scoreText, raylib::Vector2(fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statPanelHeightPadding), statTextFontSize, statTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
+		//Score
+		std::string scoreText = "SCORE";
+		mainFont.DrawText(scoreText, raylib::Vector2(fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statPanelHeightPadding), statTextFontSize, statTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
 
-	mainFont.DrawText(TextFormat("%06i", score), raylib::Vector2(fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize + statPanelHeightPadding), statTextFontSize, statTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
+		mainFont.DrawText(TextFormat("%06i", score), raylib::Vector2(fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize + statPanelHeightPadding), statTextFontSize, statTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
 
-	//Level
-	std::string levelText = "LEVEL";
-	mainFont.DrawText(levelText, raylib::Vector2(fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize * 2 + statPanelHeightPadding), statTextFontSize, statTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
+		//Level
+		std::string levelText = "LEVEL";
+		mainFont.DrawText(levelText, raylib::Vector2(fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize * 2 + statPanelHeightPadding), statTextFontSize, statTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
 
-	mainFont.DrawText(TextFormat("%03i", level), raylib::Vector2(fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize * 3 + statPanelHeightPadding), statTextFontSize, statTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
+		mainFont.DrawText(TextFormat("%03i", level), raylib::Vector2(fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize * 3 + statPanelHeightPadding), statTextFontSize, statTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
 	
-	//Cleared lines
-	std::string clearedText = "LINES";
-	mainFont.DrawText(clearedText, raylib::Vector2(fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize * 4 + statPanelHeightPadding), statTextFontSize, statTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
+		//Cleared lines
+		std::string clearedText = "LINES";
+		mainFont.DrawText(clearedText, raylib::Vector2(fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize * 4 + statPanelHeightPadding), statTextFontSize, statTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
 	
-	mainFont.DrawText(TextFormat("%03i", totalLinesCleared), raylib::Vector2(fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize * 5 + statPanelHeightPadding), statTextFontSize, statTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
+		mainFont.DrawText(TextFormat("%03i", totalLinesCleared), raylib::Vector2(fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize * 5 + statPanelHeightPadding), statTextFontSize, statTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
 
-	//Time
-	std::string timeText = "TIME";
-	mainFont.DrawText(timeText, raylib::Vector2(fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize * 6 + statPanelHeightPadding), statTextFontSize, statTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
+		//Time
+		std::string timeText = "TIME";
+		mainFont.DrawText(timeText, raylib::Vector2(fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize * 6 + statPanelHeightPadding), statTextFontSize, statTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
 
-	mainFont.DrawText(TextFormat("%03.0f", timePlayingSeconds), raylib::Vector2(fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize * 7 + statPanelHeightPadding), statTextFontSize, statTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
+		mainFont.DrawText(TextFormat("%03.0f", timePlayingSeconds), raylib::Vector2(fieldX + 0.5f * blockSize, fieldY + holdTextFontSize + blockSize * UI_PIECE_LENGTH + statTextFontSize * 7 + statPanelHeightPadding), statTextFontSize, statTextFontSize * BASE_FONT_SPACING, raylib::Color::White());
+	}
 
+	//TODO: should the lines here be moved into each part's own sections instead of all be clumped here?
 	//Borders
-	float borderThickness = 6.0f * std::min((float)fieldSize.x / DESIGN_WIDTH, (float)fieldSize.y / DESIGN_HEIGHT);
+	{
+		float borderThickness = 6.0f * std::min((float)fieldSize.x / DESIGN_WIDTH, (float)fieldSize.y / DESIGN_HEIGHT);
 
-	borderColor.DrawLine({ gridX, fieldY }, { gridX, fieldY + gridSize.y }, borderThickness);
-	borderColor.DrawLine({ gridX + gridSize.x, fieldY }, { gridX + gridSize.x, fieldY + gridSize.y }, borderThickness);
-	borderColor.DrawLine({ gridX - borderThickness / 2.0f, fieldY }, { fieldX + fieldSize.x + borderThickness / 2.0f, fieldY }, borderThickness);
-	borderColor.DrawLine({ gridX - borderThickness / 2.0f, fieldY + gridSize.y }, { gridX + gridSize.x + borderThickness / 2.0f, fieldY + gridSize.y }, borderThickness);
+		borderColor.DrawLine({ gridX, fieldY }, { gridX, fieldY + gridSize.y }, borderThickness);
+		borderColor.DrawLine({ gridX + gridSize.x, fieldY }, { gridX + gridSize.x, fieldY + gridSize.y }, borderThickness);
+		borderColor.DrawLine({ gridX - borderThickness / 2.0f, fieldY }, { fieldX + fieldSize.x + borderThickness / 2.0f, fieldY }, borderThickness);
+		borderColor.DrawLine({ gridX - borderThickness / 2.0f, fieldY + gridSize.y }, { gridX + gridSize.x + borderThickness / 2.0f, fieldY + gridSize.y }, borderThickness);
 	
-	raylib::Color holdPieceBorderColor = hasSwitchedPiece ? raylib::Color::Red() : borderColor;
-	holdPieceBorderColor.DrawLine({ fieldX - borderThickness / 2.0f, fieldY }, { fieldX + UI_PIECE_LENGTH * blockSize - borderThickness / 2.0f, fieldY }, borderThickness);
-	holdPieceBorderColor.DrawLine({ fieldX, fieldY }, { fieldX, fieldY + holdHeight }, borderThickness);
-	holdPieceBorderColor.DrawLine({ fieldX - borderThickness / 2.0f, fieldY + holdHeight }, { fieldX + UI_PIECE_LENGTH * blockSize - borderThickness / 2.0f, fieldY + holdHeight }, borderThickness);
+		raylib::Color holdPieceBorderColor = hasSwitchedPiece ? raylib::Color::Red() : borderColor;
+		holdPieceBorderColor.DrawLine({ fieldX - borderThickness / 2.0f, fieldY }, { fieldX + UI_PIECE_LENGTH * blockSize - borderThickness / 2.0f, fieldY }, borderThickness);
+		holdPieceBorderColor.DrawLine({ fieldX, fieldY }, { fieldX, fieldY + holdHeight }, borderThickness);
+		holdPieceBorderColor.DrawLine({ fieldX - borderThickness / 2.0f, fieldY + holdHeight }, { fieldX + UI_PIECE_LENGTH * blockSize - borderThickness / 2.0f, fieldY + holdHeight }, borderThickness);
 
-	borderColor.DrawLine({ fieldX, fieldY + holdHeight}, { fieldX, fieldY + holdHeight + statTextFontSize * 8 + statPanelHeightPadding * 2 }, borderThickness);
-	borderColor.DrawLine({ fieldX - borderThickness / 2.0f, fieldY + holdHeight + statTextFontSize * 8 + statPanelHeightPadding * 2 }, { fieldX - borderThickness / 2.0f + UI_PIECE_LENGTH * blockSize, fieldY + holdHeight + statTextFontSize * 8 + statPanelHeightPadding * 2 }, borderThickness);
+		borderColor.DrawLine({ fieldX, fieldY + holdHeight}, { fieldX, fieldY + holdHeight + statTextFontSize * 8 + statPanelHeightPadding * 2 }, borderThickness);
+		borderColor.DrawLine({ fieldX - borderThickness / 2.0f, fieldY + holdHeight + statTextFontSize * 8 + statPanelHeightPadding * 2 }, { fieldX - borderThickness / 2.0f + UI_PIECE_LENGTH * blockSize, fieldY + holdHeight + statTextFontSize * 8 + statPanelHeightPadding * 2 }, borderThickness);
 
-	borderColor.DrawLine({ fieldX + fieldSize.x, fieldY }, { fieldX + fieldSize.x, fieldY + nextHeight }, borderThickness);
-	borderColor.DrawLine({ gridX + gridSize.x, fieldY + nextHeight }, { fieldX + fieldSize.x + borderThickness / 2.0f, fieldY + nextHeight }, borderThickness);
+		borderColor.DrawLine({ fieldX + fieldSize.x, fieldY }, { fieldX + fieldSize.x, fieldY + nextHeight }, borderThickness);
+		borderColor.DrawLine({ gridX + gridSize.x, fieldY + nextHeight }, { fieldX + fieldSize.x + borderThickness / 2.0f, fieldY + nextHeight }, borderThickness);
+	}
 }
 
 #pragma endregion
