@@ -42,8 +42,13 @@ class Game
 
 		Game() : window(DESIGN_WIDTH, DESIGN_HEIGHT, "Kiatris", FLAG_VSYNC_HINT), audioDevice(), sceneGame(window, GameOptions())
 		{
+			//Set working directory to application directory
+			raylib::ChangeDirectory(GetApplicationDirectory());
+
 			raylib::Image icon = raylib::Image("assets/textures/kiatrisicon.png");
+			icon.Format(PIXELFORMAT_UNCOMPRESSED_R8G8B8A8); //required for window icon
 			window.SetIcon(icon);
+			icon.Unload();
 			
 			window.SetState(FLAG_WINDOW_RESIZABLE);
 			
@@ -85,7 +90,6 @@ class Game
 			}
 #endif
 			
-			icon.Unload();
 			UnloadAssets();
 
 			//window, audio device are closed and unloaded automatically
