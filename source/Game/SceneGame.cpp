@@ -1,3 +1,5 @@
+#include <cstdint>
+
 #include "Kiatris.h"
 #include "Game/SceneGame.h"
 #include "Assets.h"

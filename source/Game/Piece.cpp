@@ -1,3 +1,5 @@
+#include <cstdint>
+
 #include "Game/Piece.h"
 
 Piece Piece::GetClockwiseRotation() const
